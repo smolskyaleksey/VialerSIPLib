@@ -58,6 +58,7 @@ class VSLCallViewController: UIViewController, VSLKeypadViewControllerDelegate {
     @IBOutlet weak var speakerButton: UIButton!
     @IBOutlet weak var transferButton: UIButton!
     @IBOutlet weak var holdButton: UIButton!
+    @IBOutlet weak var bluetoothButton: UIButton!
     @IBOutlet weak var hangupButton: UIButton!
     @IBOutlet weak var keypadButton: UIButton!
 
@@ -97,6 +98,11 @@ class VSLCallViewController: UIViewController, VSLKeypadViewControllerDelegate {
             }
         }
     }
+
+    @IBAction func bluetoothButtonPressed(sender: UIButton) {
+        VSLAudio.sharedInstance().toggleBluetooth()
+    }
+
 
     @IBAction func keypadButtonPressed(sender: UIButton) {
         if let call = activeCall where call.callState == .Confirmed {
@@ -147,6 +153,7 @@ class VSLCallViewController: UIViewController, VSLKeypadViewControllerDelegate {
     func updateUI() {
         if let call = activeCall {
             updateLabels(call: call, statusLabel: statusLabel, numberLabel: numberLabel)
+            let vslAudio = VSLAudio.sharedInstance()
 
             switch call.callState {
             case .Incoming: fallthrough
@@ -159,6 +166,7 @@ class VSLCallViewController: UIViewController, VSLKeypadViewControllerDelegate {
                 holdButton?.enabled = false
                 hangupButton?.enabled = false
                 speakerButton?.enabled = false
+                bluetoothButton?.enabled = false
             case .Calling: fallthrough
             case .Early: fallthrough
             case .Connecting:
@@ -170,6 +178,7 @@ class VSLCallViewController: UIViewController, VSLKeypadViewControllerDelegate {
                 hangupButton?.enabled = true
                 speakerButton?.enabled = true
                 speakerButton?.setTitle(call.speaker ? "On Speaker" : "Speaker", forState: .Normal)
+                bluetoothButton?.enabled = false
             case .Confirmed:
                 // All buttons enabled
                 muteButton?.enabled = !call.onHold
@@ -181,6 +190,8 @@ class VSLCallViewController: UIViewController, VSLKeypadViewControllerDelegate {
                 hangupButton?.enabled = true
                 speakerButton?.enabled = true
                 speakerButton?.setTitle(call.speaker ? "On Speaker" : "Speaker", forState: .Normal)
+                bluetoothButton?.enabled = true
+                bluetoothButton.setTitle(vslAudio.bluetoothEnabled ? "BT on" : "BT off", forState: .Normal)
             }
         }
     }

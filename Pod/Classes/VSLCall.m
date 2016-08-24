@@ -9,6 +9,7 @@
 #import <CocoaLumberjack/CocoaLumberjack.h>
 #import "NSError+VSLError.h"
 #import "NSString+PJString.h"
+#import "VSLAudio.h"
 #import "VSLEndpoint.h"
 #import "VSLRingback.h"
 
@@ -55,20 +56,12 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 #pragma mark - Life Cycle
 
 + (instancetype)callNumber:(NSString *)number withAccount:(VSLAccount *)account error:(NSError * _Nullable __autoreleasing *)error {
-    NSError *audioSessionCategoryError;
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord error:&audioSessionCategoryError];
-
-    if (audioSessionCategoryError) {
-        DDLogError(@"Error setting the correct AVAudioSession category");
-        if (error != NULL) {
-            *error = [NSError VSLUnderlyingError:nil
-                         localizedDescriptionKey:NSLocalizedString(@"Error setting the correct AVAudioSession category", nil)
-                     localizedFailureReasonError:NSLocalizedString(@"Error setting the correct AVAudioSession category", nil)
-                                     errorDomain:VSLCallErrorDomain
-                                       errorCode:VSLCallErrorCannotCreateCall];
-        }
+    NSError *audioSessionConfigurationError;
+    [[VSLAudio sharedInstance] configureSharedAudioSessionWithError:&audioSessionConfigurationError];
+    if (audioSessionConfigurationError) {
         return nil;
     }
+
     pj_str_t sipUri = [number sipUriWithDomain:account.accountConfiguration.sipDomain];
 
     // Create call settings.
@@ -299,17 +292,9 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     pj_status_t status;
 
     if (self.callId != PJSUA_INVALID_ID) {
-        NSError *audioSessionCategoryError;
-        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord error:&audioSessionCategoryError];
-        if (audioSessionCategoryError) {
-            DDLogError(@"Error setting the correct AVAudioSession category");
-            if (error != NULL) {
-                *error = [NSError VSLUnderlyingError:nil
-                             localizedDescriptionKey:NSLocalizedString(@"Error setting the correct AVAudioSession category", nil)
-                         localizedFailureReasonError:NSLocalizedString(@"Error setting the correct AVAudioSession category", nil)
-                                         errorDomain:VSLCallErrorDomain
-                                           errorCode:VSLCallErrorCannotCreateCall];
-            }
+        NSError *audioSessionConfigurationError;
+        [[VSLAudio sharedInstance] configureSharedAudioSessionWithError:&audioSessionConfigurationError];
+        if (audioSessionConfigurationError) {
             return NO;
         }
 

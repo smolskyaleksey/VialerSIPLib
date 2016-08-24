@@ -401,17 +401,6 @@
                                     <action selector="keypadButtonPressed:" destination="1Mu-h3-ccv" eventType="touchUpInside" id="Md3-bl-aOv"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="clip" translatesAutoresizingMaskIntoConstraints="NO" id="0M8-7A-2EN">
-                                <rect key="frame" x="310" y="360" width="100" height="100"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="25"/>
-                                <state key="normal" title="Hold"/>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="boolean" keyPath="titleLabel.adjustsFontSizeToFitWidth" value="YES"/>
-                                </userDefinedRuntimeAttributes>
-                                <connections>
-                                    <action selector="holdButtonPressed:" destination="1Mu-h3-ccv" eventType="touchUpInside" id="po4-mT-zFk"/>
-                                </connections>
-                            </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="clip" translatesAutoresizingMaskIntoConstraints="NO" id="gjV-xs-wVo">
                                 <rect key="frame" x="370" y="240" width="100" height="100"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="25"/>
@@ -423,13 +412,6 @@
                                     <action selector="speakerButtonPressed:" destination="1Mu-h3-ccv" eventType="touchUpInside" id="aO3-qa-pJU"/>
                                 </connections>
                             </button>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Xss-U8-RbJ">
-                                <rect key="frame" x="290" y="375" width="20" height="69"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="20" id="bkF-SG-mLF"/>
-                                </constraints>
-                            </view>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="clip" translatesAutoresizingMaskIntoConstraints="NO" id="BUl-89-Ql4">
                                 <rect key="frame" x="250" y="480" width="100" height="100"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="25"/>
@@ -457,7 +439,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="clip" translatesAutoresizingMaskIntoConstraints="NO" id="jOb-YB-mYR">
-                                <rect key="frame" x="190" y="360" width="100" height="100"/>
+                                <rect key="frame" x="130" y="360" width="100" height="100"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="25"/>
                                 <state key="normal" title="Transfer"/>
                                 <userDefinedRuntimeAttributes>
@@ -467,12 +449,34 @@
                                     <action selector="transferButtonPressed:" destination="1Mu-h3-ccv" eventType="touchUpInside" id="ob0-9Z-4Zh"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="clip" translatesAutoresizingMaskIntoConstraints="NO" id="0M8-7A-2EN">
+                                <rect key="frame" x="250" y="360" width="100" height="100"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="25"/>
+                                <state key="normal" title="Hold"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="titleLabel.adjustsFontSizeToFitWidth" value="YES"/>
+                                </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <action selector="holdButtonPressed:" destination="1Mu-h3-ccv" eventType="touchUpInside" id="po4-mT-zFk"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="clip" translatesAutoresizingMaskIntoConstraints="NO" id="ixd-X7-PZG">
+                                <rect key="frame" x="370" y="360" width="100" height="100"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="25"/>
+                                <state key="normal" title="BT"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="titleLabel.adjustsFontSizeToFitWidth" value="YES"/>
+                                </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <action selector="bluetoothButtonPressed:" destination="1Mu-h3-ccv" eventType="touchUpInside" id="bjy-fh-u4c"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="BUl-89-Ql4" firstAttribute="top" secondItem="jOb-YB-mYR" secondAttribute="bottom" constant="20" id="3EH-XP-J6M"/>
-                            <constraint firstItem="0M8-7A-2EN" firstAttribute="leading" secondItem="Xss-U8-RbJ" secondAttribute="trailing" id="3iR-20-F22"/>
                             <constraint firstAttribute="trailingMargin" relation="greaterThanOrEqual" secondItem="gjV-xs-wVo" secondAttribute="trailing" id="4fr-o5-WOO"/>
+                            <constraint firstItem="ixd-X7-PZG" firstAttribute="centerY" secondItem="0M8-7A-2EN" secondAttribute="centerY" id="6jM-6h-cgT"/>
                             <constraint firstItem="0M8-7A-2EN" firstAttribute="height" secondItem="bPE-Cd-qy5" secondAttribute="height" id="8jZ-Dz-lFD"/>
                             <constraint firstItem="BUl-89-Ql4" firstAttribute="height" secondItem="jOb-YB-mYR" secondAttribute="height" id="9Xq-ZU-aMl"/>
                             <constraint firstItem="oVM-lR-HsQ" firstAttribute="top" secondItem="BUl-89-Ql4" secondAttribute="bottom" constant="20" id="BEh-NV-y8O"/>
@@ -480,28 +484,29 @@
                             <constraint firstAttribute="trailingMargin" secondItem="yg0-aG-22g" secondAttribute="trailing" constant="56" id="FTl-TB-fa0"/>
                             <constraint firstItem="MB9-wF-e2Z" firstAttribute="leading" secondItem="yg0-aG-22g" secondAttribute="leading" id="G98-Oi-D0X"/>
                             <constraint firstItem="Zu8-2k-UXn" firstAttribute="leading" secondItem="bPE-Cd-qy5" secondAttribute="trailing" constant="20" id="Hiy-Js-oRc"/>
+                            <constraint firstItem="ixd-X7-PZG" firstAttribute="height" secondItem="bPE-Cd-qy5" secondAttribute="height" id="Jyo-v4-f2L"/>
                             <constraint firstItem="BUl-89-Ql4" firstAttribute="centerX" secondItem="ry9-xi-1HA" secondAttribute="centerX" id="MVo-wM-UtF"/>
                             <constraint firstItem="bPE-Cd-qy5" firstAttribute="width" secondItem="jOb-YB-mYR" secondAttribute="width" id="NkR-fz-6wH"/>
                             <constraint firstItem="Zu8-2k-UXn" firstAttribute="width" secondItem="bPE-Cd-qy5" secondAttribute="width" id="Nke-k0-rUa"/>
                             <constraint firstItem="Zu8-2k-UXn" firstAttribute="centerX" secondItem="ry9-xi-1HA" secondAttribute="centerX" id="OSs-s7-VIb"/>
                             <constraint firstItem="gjV-xs-wVo" firstAttribute="height" secondItem="bPE-Cd-qy5" secondAttribute="height" id="RN8-OQ-Sz1"/>
                             <constraint firstItem="MB9-wF-e2Z" firstAttribute="trailing" secondItem="yg0-aG-22g" secondAttribute="trailing" id="Tt4-ua-Kgo"/>
+                            <constraint firstItem="ixd-X7-PZG" firstAttribute="width" secondItem="bPE-Cd-qy5" secondAttribute="width" id="U4Z-h5-TOX"/>
                             <constraint firstItem="gjV-xs-wVo" firstAttribute="width" secondItem="bPE-Cd-qy5" secondAttribute="width" id="UXd-aa-Pyn"/>
                             <constraint firstItem="Zu8-2k-UXn" firstAttribute="top" relation="greaterThanOrEqual" secondItem="MB9-wF-e2Z" secondAttribute="bottom" constant="20" id="X6g-35-Ynd"/>
                             <constraint firstItem="Zu8-2k-UXn" firstAttribute="centerY" secondItem="gjV-xs-wVo" secondAttribute="centerY" id="XYp-gs-blt"/>
                             <constraint firstItem="BUl-89-Ql4" firstAttribute="width" secondItem="jOb-YB-mYR" secondAttribute="width" id="Yuu-53-zVb"/>
-                            <constraint firstItem="Xss-U8-RbJ" firstAttribute="top" secondItem="Zu8-2k-UXn" secondAttribute="bottom" constant="35" id="bKN-dn-J1E"/>
                             <constraint firstItem="0M8-7A-2EN" firstAttribute="centerY" secondItem="jOb-YB-mYR" secondAttribute="centerY" id="cqw-1l-54X"/>
+                            <constraint firstItem="jOb-YB-mYR" firstAttribute="centerX" secondItem="bPE-Cd-qy5" secondAttribute="centerX" id="dhH-cS-f9b"/>
                             <constraint firstItem="bPE-Cd-qy5" firstAttribute="height" secondItem="jOb-YB-mYR" secondAttribute="height" id="eHC-JC-x4a"/>
                             <constraint firstItem="bPE-Cd-qy5" firstAttribute="centerY" secondItem="Zu8-2k-UXn" secondAttribute="centerY" id="gXT-L1-w3x"/>
                             <constraint firstItem="yg0-aG-22g" firstAttribute="top" secondItem="1E9-Q9-kcX" secondAttribute="bottom" constant="20" id="inu-Ec-d1e"/>
-                            <constraint firstItem="Xss-U8-RbJ" firstAttribute="leading" secondItem="jOb-YB-mYR" secondAttribute="trailing" id="kvl-N2-TRN"/>
                             <constraint firstItem="yg0-aG-22g" firstAttribute="leading" secondItem="ry9-xi-1HA" secondAttribute="leadingMargin" constant="56" id="lMq-0L-gIZ"/>
-                            <constraint firstItem="Xss-U8-RbJ" firstAttribute="centerX" secondItem="ry9-xi-1HA" secondAttribute="centerX" id="nMo-QD-l9L"/>
+                            <constraint firstItem="ixd-X7-PZG" firstAttribute="centerX" secondItem="gjV-xs-wVo" secondAttribute="centerX" id="m1v-6c-k2X"/>
                             <constraint firstItem="jOb-YB-mYR" firstAttribute="top" secondItem="Zu8-2k-UXn" secondAttribute="bottom" constant="20" id="otV-gF-5uG"/>
                             <constraint firstItem="bPE-Cd-qy5" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="ry9-xi-1HA" secondAttribute="leadingMargin" id="rju-7Y-v8h"/>
                             <constraint firstItem="MB9-wF-e2Z" firstAttribute="top" secondItem="yg0-aG-22g" secondAttribute="bottom" constant="8" id="sw0-go-Qnj"/>
-                            <constraint firstItem="BUl-89-Ql4" firstAttribute="top" secondItem="Xss-U8-RbJ" secondAttribute="bottom" constant="36" id="tHS-ob-nqb"/>
+                            <constraint firstItem="0M8-7A-2EN" firstAttribute="centerX" secondItem="Zu8-2k-UXn" secondAttribute="centerX" id="ucd-Xy-Dkq"/>
                             <constraint firstItem="gjV-xs-wVo" firstAttribute="leading" secondItem="Zu8-2k-UXn" secondAttribute="trailing" constant="20" id="vDD-I0-zVN"/>
                             <constraint firstItem="bPE-Cd-qy5" firstAttribute="width" secondItem="bPE-Cd-qy5" secondAttribute="height" multiplier="1:1" id="w8F-yU-mcr"/>
                             <constraint firstItem="0M8-7A-2EN" firstAttribute="width" secondItem="bPE-Cd-qy5" secondAttribute="width" id="y2I-Sm-bZT"/>
@@ -516,6 +521,7 @@
                         </barButtonItem>
                     </navigationItem>
                     <connections>
+                        <outlet property="bluetoothButton" destination="ixd-X7-PZG" id="quz-9N-epA"/>
                         <outlet property="hangupButton" destination="BUl-89-Ql4" id="oFv-IY-D12"/>
                         <outlet property="holdButton" destination="0M8-7A-2EN" id="IKe-LQ-icJ"/>
                         <outlet property="keypadButton" destination="Zu8-2k-UXn" id="nD6-am-BX9"/>
@@ -1247,7 +1253,7 @@
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
-        <segue reference="4zL-3o-bhB"/>
-        <segue reference="za9-Z6-H2d"/>
+        <segue reference="YHy-xe-5wc"/>
+        <segue reference="gOS-Fu-cCZ"/>
     </inferredMetricsTieBreakers>
 </document>
