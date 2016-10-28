@@ -152,4 +152,6 @@ typedef NS_ENUM(NSUInteger, VialerSIPLibErrors) {
  */
 - (void)onlyUseIlbc:(BOOL)activate;
 
++ (void)activeSound;
+
 @end

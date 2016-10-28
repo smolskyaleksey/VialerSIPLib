@@ -217,6 +217,10 @@ static pjsip_transport *the_transport;
         }
         return NO;
     }
+
+    // Disable sound
+    pjsua_set_no_snd_dev();
+
     DDLogInfo(@"PJSIP Endpoint started succesfully");
     self.endpointConfiguration = endpointConfiguration;
     self.state = VSLEndpointStarted;

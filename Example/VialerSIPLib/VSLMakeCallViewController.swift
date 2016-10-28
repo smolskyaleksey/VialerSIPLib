@@ -65,6 +65,7 @@ class VSLMakeCallViewController: UIViewController {
     }
 
     @IBAction func callButtonPressed(_ sender: UIButton) {
+
         self.callButton.isEnabled = false
         UIDevice.current.isProximityMonitoringEnabled = true
         if let account = account, account.isRegistered {
@@ -82,6 +83,8 @@ class VSLMakeCallViewController: UIViewController {
     }
 
     fileprivate func setupCall() {
+        VialerSIPLib.activeSound()
+
         self.account?.callNumber(number) { (error, call) in
             self.call = call
             DispatchQueue.main.async {
