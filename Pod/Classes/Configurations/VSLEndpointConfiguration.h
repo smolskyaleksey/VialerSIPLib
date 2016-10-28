@@ -4,6 +4,27 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <VialerPJSIP/pjsua.h>
+
+/**
+ *  SRTP options.
+ */
+typedef NS_ENUM(NSInteger, VSLEndpointConfigurationSRTPOptions) {
+    /**
+     *  Disabled
+     */
+    VSLEndpointConfigurationSRTPOptionDisabled = PJMEDIA_SRTP_DISABLED,
+    /**
+     *  Optional
+     */
+    VSLEndpointConfigurationSRTPOptionOptional = PJMEDIA_SRTP_OPTIONAL,
+    /**
+     *  Mandatory
+     */
+    VSLEndpointConfigurationSRTPOptionMandatory = PJMEDIA_SRTP_MANDATORY,
+};
+#define VSLEndpointConfigurationSRTPOptionsString(VSLEndpointConfigurationSRTPOptions) [@[@"VSLEndpointConfigurationSRTPOptionDisabled", @"VSLEndpointConfigurationSRTPOptionDisabled", @"VSLEndpointConfigurationSRTPOptionDisabled"] objectAtIndex:VSLEndpointConfigurationSRTPOptions]
+
 
 @interface VSLEndpointConfiguration : NSObject
 
@@ -83,4 +104,7 @@
  * User-Agent header will be sent with outgoing requests.
  */
 @property (strong, nonatomic) NSString *userAgent;
+
+@property (nonatomic) VSLEndpointConfigurationSRTPOptions srtpOption;
+
 @end

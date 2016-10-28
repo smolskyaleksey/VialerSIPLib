@@ -28,7 +28,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     fileprivate func setupVialerEndpoint() {
         let endpointConfiguration = VSLEndpointConfiguration()
         endpointConfiguration.userAgent = "VialerSIPLib Example App"
-        endpointConfiguration.transportConfigurations = [VSLTransportConfiguration(transportType: .TCP)!, VSLTransportConfiguration(transportType: .UDP)!]
+        let tcp = VSLTransportConfiguration(transportType: .TCP)!
+        tcp.port = 5061
+        let udp = VSLTransportConfiguration(transportType: .UDP)!
+        udp.port = 5061
+        let tls = VSLTransportConfiguration(transportType: .TLS)!
+        tls.port = 5062
+        endpointConfiguration.transportConfigurations = [tcp, udp, tls]
+        endpointConfiguration.srtpOption = .mandatory
+
         do {
             try VialerSIPLib.sharedInstance().configureLibrary(withEndPointConfiguration: endpointConfiguration)
             VialerSIPLib.sharedInstance().setIncomingCall{ (call) in

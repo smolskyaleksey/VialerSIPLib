@@ -94,7 +94,7 @@ static NSString * const VSLAccountErrorDomain = @"VialerSIPLib.VSLAccount";
     // If the endpoint has a tcp connection create a variable with the needed information.
     NSString *tcp = @"";
     if ([[VSLEndpoint sharedEndpoint].endpointConfiguration hasTCPConfiguration]) {
-        tcp = @";transport=tcp";
+        tcp = @";transport=tls";
     }
 
     pjsua_acc_config acc_cfg;

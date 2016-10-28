@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "D218DAE45EA9777BF0A80C22E665DE051A4B25AD",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "D218DAE45EA9777BF0A80C22E665DE051A4B25AD" : 9223372036854775807,
+    "8092C8C7FB5C3FF769ACA4A4D09F354B1F39375F" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "999C640E-4712-411B-8B02-ED192E6FB206",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "D218DAE45EA9777BF0A80C22E665DE051A4B25AD" : "VialerSIPLib\/",
+    "8092C8C7FB5C3FF769ACA4A4D09F354B1F39375F" : "OpenSSL-for-iPhone\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "VialerSIPLib",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "Example\/VialerSIPLib.xcworkspace",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/x2on\/OpenSSL-for-iPhone.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "8092C8C7FB5C3FF769ACA4A4D09F354B1F39375F"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/VoIPGRID\/VialerSIPLib",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "D218DAE45EA9777BF0A80C22E665DE051A4B25AD"
+    }
+  ]
+}

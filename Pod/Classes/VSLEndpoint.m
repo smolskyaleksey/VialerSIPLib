@@ -162,6 +162,8 @@ static pjsip_transport *the_transport;
     endpointConfig.cb.on_transport_state = &onTransportState;
     endpointConfig.max_calls = (unsigned int)endpointConfiguration.maxCalls;
     endpointConfig.user_agent = endpointConfiguration.userAgent.pjString;
+    endpointConfig.use_srtp = endpointConfiguration.srtpOption;
+    endpointConfig.srtp_secure_signaling = 1;
 
     // Configure the media information for the endpoint.
     pjsua_media_config mediaConfig;
@@ -187,6 +189,7 @@ static pjsip_transport *the_transport;
     for (VSLTransportConfiguration *transportConfiguration in endpointConfiguration.transportConfigurations) {
         pjsua_transport_config transportConfig;
         pjsua_transport_config_default(&transportConfig);
+        transportConfig.port = transportConfiguration.port;
 
         pjsip_transport_type_e transportType = (pjsip_transport_type_e)transportConfiguration.transportType;
         pjsua_transport_id transportId;
@@ -217,6 +220,10 @@ static pjsip_transport *the_transport;
         }
         return NO;
     }
+
+    // Disable sound
+    pjsua_set_no_snd_dev();
+
     DDLogInfo(@"PJSIP Endpoint started succesfully");
     self.endpointConfiguration = endpointConfiguration;
     self.state = VSLEndpointStarted;
@@ -646,6 +653,5 @@ static void onNatDetect(const pj_stun_nat_detect_result *res){
         DDLogDebug(@"NAT detected as %s", res->nat_type_name);
     }
 }
-
 
 @end

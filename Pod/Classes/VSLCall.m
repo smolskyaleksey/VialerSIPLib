@@ -56,20 +56,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 #pragma mark - Life Cycle
 
 + (instancetype)callNumber:(NSString *)number withAccount:(VSLAccount *)account error:(NSError * _Nullable __autoreleasing *)error {
-    NSError *audioSessionCategoryError;
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord error:&audioSessionCategoryError];
 
-    if (audioSessionCategoryError) {
-        DDLogError(@"Error setting the correct AVAudioSession category");
-        if (error != NULL) {
-            *error = [NSError VSLUnderlyingError:nil
-                         localizedDescriptionKey:NSLocalizedString(@"Error setting the correct AVAudioSession category", nil)
-                     localizedFailureReasonError:NSLocalizedString(@"Error setting the correct AVAudioSession category", nil)
-                                     errorDomain:VSLCallErrorDomain
-                                       errorCode:VSLCallErrorCannotCreateCall];
-        }
-        return nil;
-    }
     pj_str_t sipUri = [number sipUriWithDomain:account.accountConfiguration.sipDomain];
 
     // Create call settings.

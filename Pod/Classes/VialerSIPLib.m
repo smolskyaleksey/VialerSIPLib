@@ -5,6 +5,7 @@
 
 #import "VialerSIPLib.h"
 
+@import AVFoundation;
 #import "Constants.h"
 #import <CocoaLumberJack/CocoaLumberjack.h>
 #import "NSError+VSLError.h"
@@ -150,6 +151,29 @@ static NSString * const VialerSIPLibErrorDomain = @"VialerSIPLib.error";
 
 - (void)onlyUseIlbc:(BOOL)activate {
     [self.endpoint onlyUseILBC:activate];
+}
+
++ (void)activeSound {
+    NSError *audioSessionCategoryError;
+    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionAllowBluetooth error:&audioSessionCategoryError];
+
+    if (audioSessionCategoryError) {
+        DDLogError(@"Error setting the correct AVAudioSession category");
+    }
+
+    NSError *audioSessionModeError;
+    [[AVAudioSession sharedInstance] setMode:AVAudioSessionModeVoiceChat error:&audioSessionModeError];
+
+    if (audioSessionModeError) {
+        DDLogError(@"Error setting the correct AVAudioSession mode");
+    }
+
+    pj_status_t status;
+    status = pjsua_set_snd_dev(PJMEDIA_AUD_DEFAULT_CAPTURE_DEV, PJMEDIA_AUD_DEFAULT_PLAYBACK_DEV);
+
+    if (status != PJ_SUCCESS) {
+        NSLog(@"Failure in enabling sound device");
+    }
 }
 
 @end

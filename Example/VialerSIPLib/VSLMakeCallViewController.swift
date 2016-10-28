@@ -65,6 +65,9 @@ class VSLMakeCallViewController: UIViewController {
     }
 
     @IBAction func callButtonPressed(_ sender: UIButton) {
+
+        VialerSIPLib.activeSound()
+
         self.callButton.isEnabled = false
         UIDevice.current.isProximityMonitoringEnabled = true
         if let account = account, account.isRegistered {
