@@ -512,7 +512,9 @@ static void onRegState2(pjsua_acc_id acc_id, pjsua_reg_info *info) {
     struct pjsip_regc_cbparam *rp = info->cbparam;
 
     if (rp->code/100 == 2 && rp->expiration > 0 && rp->contact_cnt > 0) {
-        // TCP tranport already saved in onRegStarted
+        releaseStoredTransport();
+        the_transport = rp->rdata->tp_info.transport;
+        pjsip_transport_add_ref(the_transport);
     } else {
         releaseStoredTransport();
     }
@@ -528,6 +530,8 @@ static void onTransportState(pjsip_transport *tp, pjsip_transport_state state, c
     if (state == PJSIP_TP_STATE_DISCONNECTED && the_transport == tp) {
         releaseStoredTransport();
     }
+    the_transport = tp;
+    pjsip_transport_add_ref(tp);
 }
 
 static void onIncomingCall(pjsua_acc_id acc_id, pjsua_call_id call_id, pjsip_rx_data *rdata) {
@@ -571,9 +575,9 @@ static void releaseStoredTransport() {
  *  @return YES if succesfull
  */
 - (BOOL)shutdownTransport {
-    pj_status_t status;
 
     if (the_transport) {
+        pj_status_t status;
         status = pjsip_transport_shutdown(the_transport);
         DDLogInfo(@"Shuting down transport");
         if (status != PJ_SUCCESS) {
