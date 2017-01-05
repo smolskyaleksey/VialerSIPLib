@@ -43,6 +43,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 @property (strong, nonatomic) NSString *currentAudioSessionCategory;
 @property (nonatomic) BOOL connected;
 @property (nonatomic) BOOL userDidHangUp;
+@property (nonatomic) BOOL hasVideo;
 @property (strong, nonatomic) AVAudioPlayer *disconnectedSoundPlayer;
 @property (readwrite, nonatomic) VSLCallTransferState transferStatus;
 @property (readwrite, nonatomic) NSTimeInterval lastSeenConnectDuration;
@@ -289,6 +290,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 #pragma mark - Callback methods
 
 - (void)updateCallInfo:(pjsua_call_info)callInfo {
+    self.hasVideo = callInfo.rem_vid_cnt > 0;
     self.callState = (VSLCallState)callInfo.state;
     self.callStateText = [NSString stringWithPJString:callInfo.state_text];
     self.lastStatus = callInfo.last_status;

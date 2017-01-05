@@ -239,6 +239,8 @@ typedef  NS_ENUM(NSInteger, VSLCallTransferState) {
 
 @property (readonly) BOOL connected;
 
+@property (readonly) BOOL hasVideo;
+
 #pragma mark - Stats
 
 /**
