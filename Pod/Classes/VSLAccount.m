@@ -123,9 +123,11 @@ static NSString * const VSLAccountErrorDomain = @"VialerSIPLib.VSLAccount";
     acc_cfg.sip_stun_use = accountConfiguration.sipStunType;
     acc_cfg.ice_cfg.enable_ice = PJ_FALSE;
     acc_cfg.turn_cfg.enable_turn = PJ_TRUE;
+    acc_cfg.vid_in_auto_show = PJ_TRUE;
+    acc_cfg.vid_out_auto_transmit = PJ_TRUE;
 
     // If a proxy server is present on the account configuration add this to pjsua account configuration.
-    if (accountConfiguration.sipProxyServer) {
+    if (accountConfiguration.sipProxyServer.length > 0) {
         acc_cfg.proxy_cnt = 1;
         acc_cfg.proxy[0] = [[accountConfiguration.sipProxyServer stringByAppendingString:tcp] prependSipUri].pjString;
     }
@@ -284,8 +286,8 @@ static NSString * const VSLAccountErrorDomain = @"VialerSIPLib.VSLAccount";
 
 #pragma mark - Calling methods
 
-- (void)callNumber:(NSString *)number completion:(void(^)(VSLCall *call, NSError *error))completion {
-    [self.callManager startCallToNumber:number forAccount:self completion:completion];
+- (void)callNumber:(NSString *)number hasVideo:(BOOL)video completion:(void(^)(VSLCall *call, NSError *error))completion {
+    [self.callManager startCallToNumber:number hasVideo:video forAccount:self completion:completion];
 }
 
 - (void)addCall:(VSLCall *)call {

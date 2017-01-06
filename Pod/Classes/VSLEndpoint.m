@@ -377,8 +377,35 @@ static pjsip_transport *the_transport;
             }
         }
     }
+    
+    const unsigned videoCodecInfoSize = 64;
+    pjsua_codec_info videoCodecInfo[videoCodecInfoSize];
+    unsigned videoCodecCount = videoCodecInfoSize;
+    pj_status_t videoStatus = pjsua_vid_enum_codecs(videoCodecInfo, &videoCodecCount);
+    if (videoStatus != PJ_SUCCESS) {
+        DDLogError(@"Error getting list of video codecs");
+        return NO;
+    } else {
+        for (NSUInteger i = 0; i < videoCodecCount; i++) {
+            NSString *codecIdentifier = [NSString stringWithPJString:videoCodecInfo[i].codec_id];
+            DDLogError(@"%@",codecIdentifier);
+            pj_uint8_t priority = [self priorityForVideoCodec:codecIdentifier];
+            videoStatus = pjsua_vid_codec_set_priority(&videoCodecInfo[i].codec_id, priority);
+            if (videoStatus != PJ_SUCCESS) {
+                DDLogError(@"Error setting video codec priority to the correct value");
+                return NO;
+            }
+        }
+    }
+    
     return YES;
 }
+
+- (pj_uint8_t)priorityForVideoCodec:(NSString *)identifier {
+    NSDictionary *priorities = @{@"H264/97": @210};
+    return (pj_uint8_t)[priorities[identifier] unsignedIntegerValue];
+}
+
 
 - (pj_uint8_t)priorityForCodec:(NSString *)identifier {
     NSDictionary *priorities;

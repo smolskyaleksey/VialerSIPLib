@@ -57,14 +57,15 @@
     return _callController;
 }
 
-- (void)startCallToNumber:(NSString *)number forAccount:(VSLAccount *)account completion:(void (^)(VSLCall *call, NSError *error))completion {
-    VSLCall *call = [[VSLCall alloc] initOutboundCallWithNumberToCall:number account:account];
+- (void)startCallToNumber:(NSString *)number hasVideo:(BOOL)video forAccount:(VSLAccount *)account completion:(void (^)(VSLCall *call, NSError *error))completion {
+    VSLCall *call = [[VSLCall alloc] initOutboundCallWithNumberToCall:number hasVideo:video account:account];
     [self addCall:call];
 
     if ([VialerSIPLib callKitAvailable]) {
         CXHandle *numberHandle = [[CXHandle alloc] initWithType:CXHandleTypePhoneNumber value:call.numberToCall];
-        CXAction *startCallAction = [[CXStartCallAction alloc] initWithCallUUID:call.uuid handle:numberHandle];
-
+        CXStartCallAction *startCallAction = [[CXStartCallAction alloc] initWithCallUUID:call.uuid handle:numberHandle];
+        startCallAction.video = video;
+        
         [self requestCallKitAction:startCallAction completion:^(NSError *error) {
             if (error) {
                 DDLogError(@"Error requesting \"Start Call Transaction\" error: %@", error);

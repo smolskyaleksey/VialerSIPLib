@@ -34,7 +34,7 @@
  *  @param completion A completion block which is always invoked. Either the call is started successfully and you can obtain an
  *  VSLCall instance throught the block or, when the call fails, you can query the blocks error parameter.
  */
-- (void)startCallToNumber:(NSString * _Nonnull)number forAccount:(VSLAccount * _Nonnull)account completion:(void (^_Nonnull )(VSLCall * _Nullable call, NSError * _Nullable error))completion;
+- (void)startCallToNumber:(NSString * _Nonnull)number hasVideo:(BOOL)video forAccount:(VSLAccount * _Nonnull)account completion:(void (^_Nonnull )(VSLCall * _Nullable call, NSError * _Nullable error))completion;
 
 /**
  *  Answers the given inbound call.

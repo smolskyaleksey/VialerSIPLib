@@ -19,6 +19,16 @@
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
 static NSString * const VSLCallErrorDomain = @"VialerSIPLib.VSLCall";
 
+const pjmedia_orient pj_ori[4] =
+{
+    PJMEDIA_ORIENT_ROTATE_90DEG,  /* UIDeviceOrientationPortrait */
+    PJMEDIA_ORIENT_ROTATE_270DEG, /* UIDeviceOrientationPortraitUpsideDown */
+    PJMEDIA_ORIENT_ROTATE_180DEG, /* UIDeviceOrientationLandscapeLeft,
+                                   home button on the right side */
+    PJMEDIA_ORIENT_NATURAL        /* UIDeviceOrientationLandscapeRight,
+                                   home button on the left side */
+};
+
 NSString * const VSLCallStateChangedNotification = @"VSLCallStateChangedNotification";
 NSString * const VSLCallConnectedNotification = @"VSLCallConnectedNotification";
 NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotification";
@@ -42,8 +52,8 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 @property (readwrite, nonatomic) BOOL onHold;
 @property (strong, nonatomic) NSString *currentAudioSessionCategory;
 @property (nonatomic) BOOL connected;
-@property (nonatomic) BOOL userDidHangUp;
 @property (nonatomic) BOOL hasVideo;
+@property (nonatomic) BOOL userDidHangUp;
 @property (strong, nonatomic) AVAudioPlayer *disconnectedSoundPlayer;
 @property (readwrite, nonatomic) VSLCallTransferState transferStatus;
 @property (readwrite, nonatomic) NSTimeInterval lastSeenConnectDuration;
@@ -65,6 +75,11 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     if (self = [super init]) {
         self.uuid = [[NSUUID alloc] init];
         self.account = account;
+        [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(changeOrientationVideo:)
+                                                     name:UIDeviceOrientationDidChangeNotification
+                                                   object:[UIDevice currentDevice]];
     }
     return self;
 }
@@ -88,14 +103,16 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     return self;
 }
 
-- (instancetype)initOutboundCallWithNumberToCall:(NSString *)number account:(VSLAccount *)account {
+- (instancetype)initOutboundCallWithNumberToCall:(NSString *)number hasVideo:(BOOL)video account:(VSLAccount *)account {
     if (self = [self initPrivateWithAccount:account]) {
         self.numberToCall = [VialerUtils cleanPhoneNumber:number];
+        self.hasVideo = video;
     }
     return self;
 }
 
 - (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     DDLogVerbose(@"Dealloc Call uuid:%@ id:%ld", self.uuid.UUIDString, (long)self.callId);
 }
 
@@ -217,9 +234,15 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     pjsua_call_setting callSetting;
     pjsua_call_setting_default(&callSetting);
     callSetting.aud_cnt = 1;
+    if (!self.hasVideo) {
+        callSetting.vid_cnt = 0;
+    } else {
+        [self changeOrientationVideo:nil];
+    }
+    
+    DDLogVerbose(@"callSetting.aud_cnt %d,callSetting.flag %d, callSetting.vid_cnt %d,callSetting.req_keyframe_method %d",callSetting.aud_cnt,callSetting.flag,callSetting.vid_cnt,callSetting.req_keyframe_method);
 
     pj_status_t status = pjsua_call_make_call((int)self.account.accountId, &sipUri, &callSetting, NULL, NULL, (int *)&_callId);
-    DDLogVerbose(@"Call(%@) received id:%ld", self.uuid.UUIDString, (long)self.callId);
 
     NSError *error;
     if (status != PJ_SUCCESS) {
@@ -327,7 +350,14 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     pj_status_t status;
 
     if (self.callId != PJSUA_INVALID_ID) {
-        status = pjsua_call_answer((int)self.callId, PJSIP_SC_OK, NULL, NULL);
+        if (self.hasVideo) {
+            // Create call settings.
+            pjsua_call_setting callSetting;
+            pjsua_call_setting_default(&callSetting);
+            status = pjsua_call_answer2((int)self.callId, &callSetting, PJSIP_SC_OK, NULL, NULL);
+        } else {
+            status = pjsua_call_answer((int)self.callId, PJSIP_SC_OK, NULL, NULL);
+        }
 
         if (status != PJ_SUCCESS) {
             DDLogError(@"Could not answer call PJSIP returned status code:%d", status);
@@ -731,6 +761,37 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     [desc appendFormat:@"\t User Did Hangup: %@\n", self.userDidHangUp? @"YES" : @"NO"];
 
     return desc;
+}
+
+- (void)changeOrientationVideo:(NSNotification *)note
+{
+#if PJSUA_HAS_VIDEO
+    static pj_thread_desc a_thread_desc;
+    static pj_thread_t *a_thread;
+    static UIDeviceOrientation prev_ori = 0;
+    UIDeviceOrientation dev_ori = [[UIDevice currentDevice] orientation];
+    int i;
+    
+    if (dev_ori == prev_ori) return;
+    if (prev_ori == 0 && dev_ori == UIDeviceOrientationFaceUp) {
+        dev_ori = UIDeviceOrientationPortrait;
+    }
+    DDLogInfo(@"Device orientation changed: %d", (prev_ori = dev_ori));
+    
+    if (dev_ori >= UIDeviceOrientationPortrait &&
+        dev_ori <= UIDeviceOrientationLandscapeRight)
+    {
+        /* Here we set the orientation for all video devices.
+         * This may return failure for renderer devices or for
+         * capture devices which do not support orientation setting,
+         * we can simply ignore them.
+         */
+        for (i = pjsua_vid_dev_count()-1; i >= 0; i--) {
+            pjsua_vid_dev_set_setting(i, PJMEDIA_VID_DEV_CAP_ORIENTATION,
+                                      &pj_ori[dev_ori-1], PJ_TRUE);
+        }
+    }
+#endif
 }
 
 @end

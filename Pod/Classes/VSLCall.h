@@ -321,7 +321,7 @@ typedef  NS_ENUM(NSInteger, VSLCallTransferState) {
  *
  *  @return VSLCall instance.
  */
-- (instancetype _Nullable)initOutboundCallWithNumberToCall:(NSString * _Nonnull)number account:(VSLAccount * _Nonnull)account;
+- (instancetype _Nullable)initOutboundCallWithNumberToCall:(NSString * _Nonnull)number hasVideo:(BOOL)video account:(VSLAccount * _Nonnull)account;
 
 /**
  *  This will change the callState of the call.
