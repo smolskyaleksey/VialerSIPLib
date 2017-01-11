@@ -32,6 +32,7 @@ static NSString * const VialerSIPLibErrorDomain = @"VialerSIPLib.error";
 }
 
 + (BOOL)callKitAvailable {
+    return NO;
     // Check if Callkit is available by checking the CallKit classes used
     if ([CXAction class] && [CXTransaction class] && [CXCall class]) {
         return true;

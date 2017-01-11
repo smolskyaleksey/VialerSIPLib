@@ -388,9 +388,22 @@ static pjsip_transport *the_transport;
     } else {
         for (NSUInteger i = 0; i < videoCodecCount; i++) {
             NSString *codecIdentifier = [NSString stringWithPJString:videoCodecInfo[i].codec_id];
-            DDLogError(@"%@",codecIdentifier);
             pj_uint8_t priority = [self priorityForVideoCodec:codecIdentifier];
             videoStatus = pjsua_vid_codec_set_priority(&videoCodecInfo[i].codec_id, priority);
+            
+            pjmedia_vid_codec_param param;
+            pjsua_vid_codec_get_param(&videoCodecInfo[i].codec_id, &param);
+            param.ignore_fmtp = PJ_TRUE;
+            param.enc_fmt.det.vid.size.w = 288;
+            param.enc_fmt.det.vid.size.h = 352;
+            param.enc_fmt.det.vid.fps.num = 15;
+            param.enc_fmt.det.vid.fps.denum = 1;
+            param.enc_fmt.det.vid.avg_bps = 512000;
+            param.enc_fmt.det.vid.max_bps = 1024000;
+            param.dec_fmt.det.vid.size.w = 1920;
+            param.dec_fmt.det.vid.size.h = 1920;
+            pjsua_vid_codec_set_param(&videoCodecInfo[i].codec_id, &param);
+            
             if (videoStatus != PJ_SUCCESS) {
                 DDLogError(@"Error setting video codec priority to the correct value");
                 return NO;

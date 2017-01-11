@@ -313,9 +313,11 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 #pragma mark - Callback methods
 
 - (void)updateCallInfo:(pjsua_call_info)callInfo {
-    self.hasVideo = callInfo.rem_vid_cnt > 0;
-    self.callState = (VSLCallState)callInfo.state;
+    if (callInfo.state == PJSIP_INV_STATE_INCOMING) {
+        self.hasVideo = callInfo.rem_vid_cnt > 0;
+    }
     self.callStateText = [NSString stringWithPJString:callInfo.state_text];
+    self.callState = (VSLCallState)callInfo.state;
     self.lastStatus = callInfo.last_status;
     self.lastStatusText = [NSString stringWithPJString:callInfo.last_status_text];
     self.localURI = [NSString stringWithPJString:callInfo.local_info];
@@ -350,14 +352,17 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     pj_status_t status;
 
     if (self.callId != PJSUA_INVALID_ID) {
+        // Create call settings.
+        pjsua_call_setting callSetting;
+        pjsua_call_setting_default(&callSetting);
         if (self.hasVideo) {
-            // Create call settings.
-            pjsua_call_setting callSetting;
-            pjsua_call_setting_default(&callSetting);
-            status = pjsua_call_answer2((int)self.callId, &callSetting, PJSIP_SC_OK, NULL, NULL);
+            callSetting.vid_cnt = 1;
+            callSetting.aud_cnt = 1;
         } else {
-            status = pjsua_call_answer((int)self.callId, PJSIP_SC_OK, NULL, NULL);
+            callSetting.vid_cnt = 0;
+            callSetting.aud_cnt = 1;
         }
+        status = pjsua_call_answer2((int)self.callId, &callSetting, PJSIP_SC_OK, NULL, NULL);
 
         if (status != PJ_SUCCESS) {
             DDLogError(@"Could not answer call PJSIP returned status code:%d", status);
@@ -792,6 +797,98 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
         }
     }
 #endif
+}
+
+
+
+- (UIView *)createPreviewWindow:(CGRect)frame {
+    pjsua_vid_win_id wid = 0;
+    wid = pjsua_vid_preview_get_win(PJMEDIA_VID_DEFAULT_CAPTURE_DEV);
+    pjmedia_coord rect;
+    rect.x = 0;
+    rect.y = 0;
+    pjmedia_rect_size rect_size;
+    rect_size.h = frame.size.height;
+    rect_size.w = frame.size.width;
+    pjsua_vid_win_set_size(wid,&rect_size);
+    pjsua_vid_win_set_pos(wid,&rect);
+    pjsua_vid_win_info win_info;
+    pjsua_vid_win_get_info(wid, &win_info);
+    UIView *view = (__bridge UIView *)win_info.hwnd.info.ios.window;
+    view.frame = frame;
+    win_info.is_native = PJ_TRUE;
+    win_info.show = YES;
+    
+    return view;
+}
+
+
+- (UIView *)createVideoWindow:(CGRect)frame {
+    NSLog(@"_callId:%d", _callId);
+    
+    // 获取窗口ID
+    int vid_idx;
+    pjsua_vid_win_id wid = 0;
+    vid_idx = pjsua_call_get_vid_stream_idx(_callId);
+    //    NSLog(@"vid_idx:%d", vid_idx);
+    //    pjsua_vid_win_id wids[3];
+    //    unsigned count = 3;
+    //    pjsua_vid_enum_wins(wids, &count);
+    //    pjsua_call_info ci;
+    //    pjsua_call_get_info(_callId, &ci);
+    //    for (int i=0; i<count; i++) {
+    //        wid = ci.media[i].stream.vid.win_in;
+    //    }
+    NSLog(@"wid:%d", wid);
+    if (vid_idx >= 0){
+        pjsua_call_info ci;
+        pjsua_call_get_info(_callId, &ci);
+        
+        wid = ci.media[vid_idx].stream.vid.win_in;
+    }
+    NSLog(@"wid:%d", wid);
+    //设置窗口位置大小
+    pjmedia_coord rect;
+    rect.x = 0;
+    rect.y = 0;
+    pjmedia_rect_size rect_size;
+    rect_size.h = frame.size.height;
+    rect_size.w = frame.size.width;
+    pjsua_vid_win_set_size(wid,&rect_size);
+    pjsua_vid_win_set_pos(wid,&rect);
+    pjsua_vid_win_info win_info;
+    pjsua_vid_win_get_info(wid, &win_info);
+    win_info.is_native = PJ_FALSE;
+    UIView *view = (__bridge UIView *)win_info.hwnd.info.ios.window;
+    //    win_info.show = YES;
+    pjsua_vid_win_set_show(wid, PJ_TRUE);
+    
+    return view;
+}
+
+- (BOOL)startPreviewWindow {
+    pj_thread_desc desc;
+    pj_thread_t *thread = 0;
+    if(!pj_thread_is_registered())
+    {
+        DDLogDebug(@"pj_thread_is_registered");
+        pj_thread_register(NULL,desc,&thread);
+    }
+    pjsua_vid_preview_param preview_param;
+    pjsua_vid_preview_param_default(&preview_param);
+    preview_param.wnd_flags = PJMEDIA_VID_DEV_WND_BORDER |
+    PJMEDIA_VID_DEV_WND_RESIZABLE;
+    
+    BOOL result = pjsua_vid_preview_start(PJMEDIA_VID_DEFAULT_CAPTURE_DEV, &preview_param) != PJ_SUCCESS;
+    if(result) {
+        [self stopPreviewWindow];
+        return pjsua_vid_preview_start(PJMEDIA_VID_DEFAULT_CAPTURE_DEV, &preview_param) == PJ_SUCCESS;
+    }
+    return !result;
+}
+
+- (void)stopPreviewWindow {
+    pjsua_vid_preview_stop(PJMEDIA_VID_DEFAULT_CAPTURE_DEV);
 }
 
 @end

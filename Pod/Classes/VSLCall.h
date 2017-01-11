@@ -428,4 +428,9 @@ typedef  NS_ENUM(NSInteger, VSLCallTransferState) {
  */
 - (void)reinvite;
 
+- (void)changeOrientationVideo:(NSNotification *)note;
+- (UIView *)createPreviewWindow:(CGRect)frame;
+- (UIView *)createVideoWindow:(CGRect)frame;
+- (BOOL)startPreviewWindow;
+- (void)stopPreviewWindow;
 @end
