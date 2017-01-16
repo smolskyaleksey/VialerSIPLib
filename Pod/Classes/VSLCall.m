@@ -247,13 +247,12 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     NSError *error;
     if (status != PJ_SUCCESS) {
         DDLogError(@"Error creating call");
-        if (error != NULL) {
-            error = [NSError VSLUnderlyingError:nil
-                        localizedDescriptionKey:NSLocalizedString(@"Could not setup call", nil)
-                    localizedFailureReasonError:[NSString stringWithFormat:NSLocalizedString(@"PJSIP status code: %d", nil), status]
-                                    errorDomain:VSLCallErrorDomain
-                                      errorCode:VSLCallErrorCannotCreateCall];
-        }
+        error = [NSError VSLUnderlyingError:nil
+                    localizedDescriptionKey:NSLocalizedString(@"Could not setup call", nil)
+                localizedFailureReasonError:[NSString stringWithFormat:NSLocalizedString(@"PJSIP status code: %d", nil), status]
+                                errorDomain:VSLCallErrorDomain
+                                  errorCode:VSLCallErrorCannotCreateCall];
+        
     }
     completion(error);
 }
