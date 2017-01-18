@@ -5,7 +5,7 @@
 
 #import "VSLTransportConfiguration.h"
 
-static NSInteger const VSLTransportConfigurationPort = 5060;
+static NSInteger const VSLTransportConfigurationPort = 0;
 static NSInteger const VSLTransportConfigurationPortRange = 0;
 
 @implementation VSLTransportConfiguration
