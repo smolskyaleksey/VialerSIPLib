@@ -505,7 +505,7 @@ static void logCallBack(int logLevel, const char *data, int len) {
 static void onCallState(pjsua_call_id callId, pjsip_event *event) {
     pjsua_call_info callInfo;
     pjsua_call_get_info(callId, &callInfo);
-
+dispatch_async(dispatch_get_main_queue(), ^{
     VSLAccount *account = [[VSLEndpoint sharedEndpoint] lookupAccount:callInfo.acc_id];
     if (account) {
         VSLCall *call = [account lookupCall:callId];
@@ -515,7 +515,7 @@ static void onCallState(pjsua_call_id callId, pjsip_event *event) {
             DDLogWarn(@"Received updated CallState(%@) for UNKNOWN call(id: %d)", VSLCallStateString(callInfo.state) , callId);
 
         }
-    }
+    }});
 }
 
 static void onCallMediaState(pjsua_call_id call_id) {
