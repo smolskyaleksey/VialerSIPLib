@@ -121,8 +121,11 @@ static NSString * const VSLAccountErrorDomain = @"VialerSIPLib.VSLAccount";
     acc_cfg.proxy_cnt = 0;
     acc_cfg.media_stun_use = accountConfiguration.mediaStunType;
     acc_cfg.sip_stun_use = accountConfiguration.sipStunType;
-    acc_cfg.ice_cfg.enable_ice = PJ_FALSE;
+    
+    acc_cfg.ice_cfg_use = PJSUA_ICE_CONFIG_USE_CUSTOM;
+    acc_cfg.ice_cfg.enable_ice = PJ_TRUE;
     acc_cfg.turn_cfg.enable_turn = PJ_TRUE;
+    
     acc_cfg.vid_in_auto_show = PJ_TRUE;
     acc_cfg.vid_out_auto_transmit = PJ_TRUE;
 
