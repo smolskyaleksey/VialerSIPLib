@@ -646,27 +646,29 @@ static void releaseStoredTransport() {
  *  and reinitialize the TCP transport.
  */
 - (void)checkNetworkMonitoring:(NSNotification *)notification {
-    VSLCall *call = notification.userInfo[VSLNotificationUserInfoCallKey];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        VSLCall *call = notification.userInfo[VSLNotificationUserInfoCallKey];
 
-    switch (call.callState) {
-        case VSLCallStateDisconnected: {
-            [self stopNetworkMonitoring];
-            break;
-        }
-        default: {
-            if (!self.monitoringCalls) {
-                for (VSLAccount *account in self.accounts) {
-                    if ([account firstActiveCall]) {
-                        VSLLogVerbose(@"Starting network monitor");
-                        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(ipAddressChanged:) name:VSLNetworkMonitorChangedNotification object:nil];
-                        [self.networkMonitor startMonitoring];
-                        self.monitoringCalls = YES;
-                        break;
+        switch (call.callState) {
+            case VSLCallStateDisconnected: {
+                [self stopNetworkMonitoring];
+                break;
+            }
+            default: {
+                if (!self.monitoringCalls) {
+                    for (VSLAccount *account in self.accounts) {
+                        if ([account firstActiveCall]) {
+                            VSLLogVerbose(@"Starting network monitor");
+                            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(ipAddressChanged:) name:VSLNetworkMonitorChangedNotification object:nil];
+                            [self.networkMonitor startMonitoring];
+                            self.monitoringCalls = YES;
+                            break;
+                        }
                     }
                 }
             }
         }
-    }
+    });
 }
 
 /**
