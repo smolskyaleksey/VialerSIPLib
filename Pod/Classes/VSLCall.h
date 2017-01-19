@@ -272,6 +272,11 @@ typedef  NS_ENUM(NSInteger, VSLCallTransferState) {
  */
 @property (readonly, nonatomic) float MOS;
 
+/**
+ * The codec that has been used during the call.
+ */
+@property (readonly, nonatomic) NSString * _Nonnull activeCodec;
+
 #pragma mark - Methods
 
 /**
