@@ -909,6 +909,13 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 }
 
 - (void)stopPreviewWindow {
+    pj_thread_desc desc;
+    pj_thread_t *thread = 0;
+    if(!pj_thread_is_registered())
+    {
+        DDLogDebug(@"pj_thread_is_registered");
+        pj_thread_register(NULL,desc,&thread);
+    }
     pjsua_vid_preview_stop(PJMEDIA_VID_DEFAULT_CAPTURE_DEV);
 }
 
