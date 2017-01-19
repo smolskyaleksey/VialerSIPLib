@@ -804,29 +804,31 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 - (void)changeOrientationVideo:(NSNotification *)note
 {
 #if PJSUA_HAS_VIDEO
-    static pj_thread_desc a_thread_desc;
-    static pj_thread_t *a_thread;
-    static UIDeviceOrientation prev_ori = 0;
-    UIDeviceOrientation dev_ori = [[UIDevice currentDevice] orientation];
-    int i;
-    
-    if (dev_ori == prev_ori) return;
-    if (prev_ori == 0 && dev_ori == UIDeviceOrientationFaceUp) {
-        dev_ori = UIDeviceOrientationPortrait;
-    }
-    DDLogInfo(@"Device orientation changed: %d", (prev_ori = dev_ori));
-    
-    if (dev_ori >= UIDeviceOrientationPortrait &&
-        dev_ori <= UIDeviceOrientationLandscapeRight)
-    {
-        /* Here we set the orientation for all video devices.
-         * This may return failure for renderer devices or for
-         * capture devices which do not support orientation setting,
-         * we can simply ignore them.
-         */
-        for (i = pjsua_vid_dev_count()-1; i >= 0; i--) {
-            pjsua_vid_dev_set_setting(i, PJMEDIA_VID_DEV_CAP_ORIENTATION,
-                                      &pj_ori[dev_ori-1], PJ_TRUE);
+    if (self.hasVideo) {
+        static pj_thread_desc a_thread_desc;
+        static pj_thread_t *a_thread;
+        static UIDeviceOrientation prev_ori = 0;
+        UIDeviceOrientation dev_ori = [[UIDevice currentDevice] orientation];
+        int i;
+        
+        if (dev_ori == prev_ori) return;
+        if (prev_ori == 0 && dev_ori == UIDeviceOrientationFaceUp) {
+            dev_ori = UIDeviceOrientationPortrait;
+        }
+        VSLLogInfo(@"Device orientation changed: %d", (prev_ori = dev_ori));
+        
+        if (dev_ori >= UIDeviceOrientationPortrait &&
+            dev_ori <= UIDeviceOrientationLandscapeRight)
+        {
+            /* Here we set the orientation for all video devices.
+             * This may return failure for renderer devices or for
+             * capture devices which do not support orientation setting,
+             * we can simply ignore them.
+             */
+            for (i = pjsua_vid_dev_count()-1; i >= 0; i--) {
+                pjsua_vid_dev_set_setting(i, PJMEDIA_VID_DEV_CAP_ORIENTATION,
+                                          &pj_ori[dev_ori-1], PJ_TRUE);
+            }
         }
     }
 #endif
@@ -857,30 +859,16 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 
 
 - (UIView *)createVideoWindow:(CGRect)frame {
-    NSLog(@"_callId:%d", _callId);
-    
-    // 获取窗口ID
     int vid_idx;
     pjsua_vid_win_id wid = 0;
     vid_idx = pjsua_call_get_vid_stream_idx(_callId);
-    //    NSLog(@"vid_idx:%d", vid_idx);
-    //    pjsua_vid_win_id wids[3];
-    //    unsigned count = 3;
-    //    pjsua_vid_enum_wins(wids, &count);
-    //    pjsua_call_info ci;
-    //    pjsua_call_get_info(_callId, &ci);
-    //    for (int i=0; i<count; i++) {
-    //        wid = ci.media[i].stream.vid.win_in;
-    //    }
-    NSLog(@"wid:%d", wid);
     if (vid_idx >= 0){
         pjsua_call_info ci;
         pjsua_call_get_info(_callId, &ci);
         
         wid = ci.media[vid_idx].stream.vid.win_in;
     }
-    NSLog(@"wid:%d", wid);
-    //设置窗口位置大小
+    VSLLogInfo(@"wid:%d", wid);
     pjmedia_coord rect;
     rect.x = 0;
     rect.y = 0;
