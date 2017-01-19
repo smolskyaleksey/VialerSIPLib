@@ -6,11 +6,11 @@
 #import "VSLCall.h"
 
 #import <AVFoundation/AVFoundation.h>
-#import <CocoaLumberjack/CocoaLumberjack.h>
 #import "NSError+VSLError.h"
 #import "NSString+PJString.h"
 #import "VSLAudioController.h"
 #import "VSLEndpoint.h"
+#import "VSLLogging.h"
 #import "VSLRingback.h"
 #import "VialerSIPLib.h"
 #import "VialerUtils.h"
@@ -18,6 +18,7 @@
 
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
 static NSString * const VSLCallErrorDomain = @"VialerSIPLib.VSLCall";
+static double const VSLCallDelayTimeCheckSuccessfullHangup = 0.5;
 
 const pjmedia_orient pj_ori[4] =
 {
@@ -62,6 +63,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 /**
  *  Stats
  */
+@property (readwrite, nonatomic) NSString *activeCodec;
 @property (readwrite, nonatomic) float totalMBsUsed;
 @property (readwrite, nonatomic) float R;
 @property (readwrite, nonatomic) float MOS;
@@ -99,7 +101,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
             [self updateCallInfo:callInfo];
         }
     }
-    DDLogVerbose(@"Inbound call init with uuid:%@ and id:%ld", self.uuid.UUIDString, (long)self.callId);
+    VSLLogVerbose(@"Inbound call init with uuid:%@ and id:%ld", self.uuid.UUIDString, (long)self.callId);
     return self;
 }
 
@@ -113,7 +115,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    DDLogVerbose(@"Dealloc Call uuid:%@ id:%ld", self.uuid.UUIDString, (long)self.callId);
+    VSLLogVerbose(@"Dealloc Call uuid:%@ id:%ld", self.uuid.UUIDString, (long)self.callId);
 }
 
 #pragma mark - Properties
@@ -121,7 +123,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     if (_callState != callState) {
         NSString *stringFromCallStateProperty = NSStringFromSelector(@selector(callState));
         [self willChangeValueForKey:stringFromCallStateProperty];
-        DDLogDebug(@"Call(%@). CallState will change from %@(%ld) to %@(%ld)", self.uuid.UUIDString, VSLCallStateString(_callState),
+        VSLLogDebug(@"Call(%@). CallState will change from %@(%ld) to %@(%ld)", self.uuid.UUIDString, VSLCallStateString(_callState),
                    (long)_callState, VSLCallStateString(callState), (long)callState);
         _callState = callState;
 
@@ -132,7 +134,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
             case VSLCallStateIncoming: {
                 pj_status_t status = pjsua_call_answer((pjsua_call_id)self.callId, PJSIP_SC_RINGING, NULL, NULL);
                 if (status != PJ_SUCCESS) {
-                    DDLogWarn(@"Error %d while sending status code PJSIP_SC_RINGING", status);
+                    VSLLogWarning(@"Error %d while sending status code PJSIP_SC_RINGING", status);
                 }
             } break;
 
@@ -192,7 +194,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 
 - (void)setMediaState:(VSLMediaState)mediaState {
     if (_mediaState != mediaState) {
-        DDLogDebug(@"MediaState will change from %@(%ld) to %@(%ld)", VSLMediaStateString(_mediaState),
+        VSLLogDebug(@"MediaState will change from %@(%ld) to %@(%ld)", VSLMediaStateString(_mediaState),
                    (long)_mediaState, VSLMediaStateString(mediaState), (long)mediaState);
         _mediaState = mediaState;
     }
@@ -240,19 +242,18 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
         [self changeOrientationVideo:nil];
     }
     
-    DDLogVerbose(@"callSetting.aud_cnt %d,callSetting.flag %d, callSetting.vid_cnt %d,callSetting.req_keyframe_method %d",callSetting.aud_cnt,callSetting.flag,callSetting.vid_cnt,callSetting.req_keyframe_method);
 
     pj_status_t status = pjsua_call_make_call((int)self.account.accountId, &sipUri, &callSetting, NULL, NULL, (int *)&_callId);
+    VSLLogVerbose(@"Call(%@) received id:%ld", self.uuid.UUIDString, (long)self.callId);
 
     NSError *error;
     if (status != PJ_SUCCESS) {
-        DDLogError(@"Error creating call");
+        VSLLogError(@"Error creating call");
         error = [NSError VSLUnderlyingError:nil
                     localizedDescriptionKey:NSLocalizedString(@"Could not setup call", nil)
                 localizedFailureReasonError:[NSString stringWithFormat:NSLocalizedString(@"PJSIP status code: %d", nil), status]
                                 errorDomain:VSLCallErrorDomain
                                   errorCode:VSLCallErrorCannotCreateCall];
-        
     }
     completion(error);
 }
@@ -274,7 +275,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 - (BOOL)transferToCall:(VSLCall *)secondCall {
     NSError *error;
     if (!self.onHold && ![self toggleHold:&error]) {
-        DDLogError(@"Error holding call: %@", error);
+        VSLLogError(@"Error holding call: %@", error);
         return NO;
     }
     pj_status_t success = pjsua_call_xfer_replaces((pjsua_call_id)self.callId, (pjsua_call_id)secondCall.callId, 0, nil);
@@ -295,7 +296,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
         NSError *error;
         [self hangup:&error];
         if (error) {
-            DDLogError(@"Error hangup call: %@", error);
+            VSLLogError(@"Error hangup call: %@", error);
         }
     } else {
         self.transferStatus = VSLCallTransferStateRejected;
@@ -304,8 +305,17 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 
 - (void)reinvite {
     if (self.callState > VSLCallStateNull && self.callState < VSLCallStateDisconnected) {
-        pjsua_call_reinvite((pjsua_call_id)self.callId, PJSUA_CALL_UPDATE_CONTACT, NULL);
-        DDLogDebug(@"Reinvite sent");
+        pjsua_call_setting options;
+        pjsua_call_setting_default(&options);
+        options.flag = PJSUA_CALL_UPDATE_CONTACT | PJSUA_CALL_UPDATE_VIA;
+        pj_status_t status;
+        
+        status = pjsua_call_reinvite2((pjsua_call_id)self.callId, &options, NULL);
+        if (status != PJ_SUCCESS) {
+            VSLLogError(@"Cannot reinvite!");
+        } else {
+            VSLLogDebug(@"Reinvite sent");
+        }
     }
 }
 
@@ -334,7 +344,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 
 - (void)mediaStateChanged:(pjsua_call_info)callInfo  {
     pjsua_call_media_status mediaState = callInfo.media_status;
-    DDLogVerbose(@"Media State Changed from %@ to %@", VSLMediaStateString(self.mediaState), VSLMediaStateString((VSLMediaState)mediaState));
+    VSLLogVerbose(@"Media State Changed from %@ to %@", VSLMediaStateString(self.mediaState), VSLMediaStateString((VSLMediaState)mediaState));
     self.mediaState = (VSLMediaState)mediaState;
 
     if (self.mediaState == VSLMediaStateActive || self.mediaState == VSLMediaStateRemoteHold) {
@@ -364,7 +374,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
         status = pjsua_call_answer2((int)self.callId, &callSetting, PJSIP_SC_OK, NULL, NULL);
 
         if (status != PJ_SUCCESS) {
-            DDLogError(@"Could not answer call PJSIP returned status code:%d", status);
+            VSLLogError(@"Could not answer call PJSIP returned status code:%d", status);
             NSError *error = [NSError VSLUnderlyingError:nil
                                  localizedDescriptionKey:NSLocalizedString(@"Could not answer call", nil)
                              localizedFailureReasonError:[NSString stringWithFormat:NSLocalizedString(@"PJSIP status code: %d", nil), status]
@@ -376,7 +386,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
         }
 
     } else {
-        DDLogError(@"Could not answer call, PJSIP indicated callId(%ld) as invalid", (long)self.callId);
+        VSLLogError(@"Could not answer call, PJSIP indicated callId(%ld) as invalid", (long)self.callId);
         NSError *error = [NSError VSLUnderlyingError:nil
                              localizedDescriptionKey:NSLocalizedString(@"Could not answer call", nil)
                          localizedFailureReasonError:[NSString stringWithFormat:NSLocalizedString(@"Call Id: %d invalid", nil), self.callId]
@@ -414,8 +424,24 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
                                              errorDomain:VSLCallErrorDomain
                                                errorCode:VSLCallErrorCannotHangupCall];
                 }
-                return NO;
             }
+            
+            // When there is bad or no internet connection, try to set the call to be disconnected when the user presses the hangup button.
+            // To make sure the correct flow is followed to dispatch screens.
+            __weak VSLCall *weakSelf = self;
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(VSLCallDelayTimeCheckSuccessfullHangup * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                if (!weakSelf || weakSelf.callState == VSLCallStateDisconnected) {
+                    return;
+                }
+                
+                VSLLogDebug(@"Bad or no internet connection, setting call manual to disconnect.");
+                
+                // Mute the call to make sure the other party can't hear the user anymore.
+                if (!weakSelf.muted) {
+                    [weakSelf toggleMute:nil];
+                }
+                weakSelf.callState = VSLCallStateDisconnected;
+            });
         }
     }
     return YES;
@@ -438,7 +464,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 
     if (status == PJ_SUCCESS) {
         self.muted = !self.muted;
-        DDLogVerbose(self.muted ? @"Microphone muted": @"Microphone unmuted");
+        VSLLogVerbose(self.muted ? @"Microphone muted": @"Microphone unmuted");
     } else {
         if (error != NULL) {
             NSDictionary *userInfo = @{NSLocalizedDescriptionKey:NSLocalizedString(@"Could not toggle mute call", nil),
@@ -447,21 +473,9 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
             *error = [NSError errorWithDomain:VSLCallErrorDomain code:VSLCallErrorCannotToggleMute userInfo:userInfo];
         }
         return NO;
-        DDLogError(@"Error toggle muting microphone in call %@", self.uuid.UUIDString);
+        VSLLogError(@"Error toggle muting microphone in call %@", self.uuid.UUIDString);
     }
     return YES;
-}
-
-- (void)toggleSpeaker {
-    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
-    if (!self.speaker) {
-        [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
-        self.speaker = YES;
-    } else {
-        [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
-        self.speaker = NO;
-    }
-    DDLogVerbose(self.speaker ? @"Speaker modus activated": @"Speaker modus deactivated");
 }
 
 - (BOOL)toggleHold:(NSError **)error {
@@ -475,10 +489,10 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     } else {
         status = pjsua_call_set_hold((pjsua_call_id)self.callId, NULL);
     }
-
+    
     if (status == PJ_SUCCESS) {
         self.onHold = !self.onHold;
-        DDLogVerbose(self.onHold ? @"Call is on hold": @"On hold state ended");
+        VSLLogVerbose(self.onHold ? @"Call is on hold": @"On hold state ended");
     } else {
         if (error != NULL) {
             NSDictionary *userInfo = @{NSLocalizedDescriptionKey:NSLocalizedString(@"Could not toggle onhold call", nil),
@@ -487,7 +501,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
             *error = [NSError errorWithDomain:VSLCallErrorDomain code:VSLCallErrorCannotToggleHold userInfo:userInfo];
         }
         return NO;
-        DDLogError(@"Error toggle holding in call %@", self.uuid.UUIDString);
+        VSLLogError(@"Error toggle holding in call %@", self.uuid.UUIDString);
     }
     return YES;
 }
@@ -505,7 +519,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     status = pjsua_call_dial_dtmf((pjsua_call_id)self.callId, &digits);
 
     if (status == PJ_SUCCESS) {
-        DDLogVerbose(@"Succesfull send character: %@ for DTMF for call %@", character, self.uuid.UUIDString);
+        VSLLogVerbose(@"Succesfull send character: %@ for DTMF for call %@", character, self.uuid.UUIDString);
     } else {
         // The RFC 2833 payload format did not work.
         const pj_str_t kSIPINFO = pj_str("INFO");
@@ -520,7 +534,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 
             status = pjsua_call_send_request((pjsua_call_id)self.callId, &kSIPINFO, &messageData);
             if (status == PJ_SUCCESS) {
-                DDLogVerbose(@"Succesfull send character: %@ for DTMF for call %@", character, self.uuid.UUIDString);
+                VSLLogVerbose(@"Succesfull send character: %@ for DTMF for call %@", character, self.uuid.UUIDString);
             } else {
                 if (error != NULL) {
                     NSDictionary *userInfo = @{NSLocalizedDescriptionKey:NSLocalizedString(@"Could not send DTMF", nil),
@@ -529,7 +543,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
                     *error = [NSError errorWithDomain:VSLCallErrorDomain code:VSLCallErrorCannotSendDTMF userInfo:userInfo];
                 }
                 return NO;
-                DDLogError(@"Error error sending DTMF for call %@", self.uuid.UUIDString);
+                VSLLogError(@"Error error sending DTMF for call %@", self.uuid.UUIDString);
             }
         }
     }
@@ -670,6 +684,26 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 - (void)calculateStats {
     [self calculateMOS];
     [self calculateTotalMBsUsed];
+    [self codecUsed];
+}
+
+- (void)codecUsed {
+    pj_status_t status;
+    pjsua_stream_info stream_info;
+    status = pjsua_call_get_stream_info((pjsua_call_id)self.callId, 0, &stream_info);
+    pj_str_t active_codec;
+    if (status == PJ_SUCCESS) {
+        if (stream_info.type == PJMEDIA_TYPE_AUDIO) {
+            active_codec = stream_info.info.aud.fmt.encoding_name;
+            self.activeCodec = [NSString stringWithPJString:active_codec];
+        } else {
+            DDLogDebug(@"Stream is not an audio stream");
+            self.activeCodec = @"Unknown";
+        }
+    } else {
+        DDLogInfo(@"No stream found");
+        self.activeCodec = @"Unknown";
+    }
 }
 
 - (float)calculateTotalMBsUsed {
@@ -679,7 +713,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     if (status == PJ_SUCCESS) {
         self.totalMBsUsed = (stat.rtcp.rx.bytes + stat.rtcp.tx.bytes) / 1024.0 / 1024.0;
     } else {
-        DDLogInfo(@"No data");
+        VSLLogInfo(@"No data");
     }
     return self.totalMBsUsed;
 }
@@ -728,7 +762,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
         // Now, let's deduct 2.5 R values per percentage of packet loss.
         self.R = R - (rxPacketLoss * 2.5);
     } else {
-        DDLogInfo(@"No R");
+        VSLLogInfo(@"No R");
     }
     return self.R;
 }
@@ -739,7 +773,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     if (R > 0) {
         self.MOS = 1 + 0.035 * R + .000007 * R * (R - 60) * (100 - R);
     } else {
-        DDLogInfo(@"No MOS");
+        VSLLogInfo(@"No MOS");
     }
     return self.MOS;
 }

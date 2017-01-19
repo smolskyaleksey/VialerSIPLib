@@ -7,8 +7,8 @@
 
 @import AVFoundation;
 #import "Constants.h"
-#import <CocoaLumberJack/CocoaLumberjack.h>
 #import "VialerSIPLib.h"
+#import "VSLLogging.h"
 
 NSString * const VSLAudioControllerAudioInterrupted = @"VSLAudioControllerAudioInterrupted";
 NSString * const VSLAudioControllerAudioResumed = @"VSLAudioControllerAudioResumed";
@@ -26,22 +26,55 @@ NSString * const VSLAudioControllerAudioResumed = @"VSLAudioControllerAudioResum
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:nil];
 }
 
+- (BOOL)hasBluetooth {
+    NSArray *availableInputs = [[AVAudioSession sharedInstance] availableInputs];
+
+    for (AVAudioSessionPortDescription *input in availableInputs) {
+        if ([input.portType isEqualToString:AVAudioSessionPortBluetoothHFP]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+- (VSLAudioControllerOutputs)output {
+    AVAudioSessionRouteDescription *route = [[AVAudioSession sharedInstance] currentRoute];
+    for (AVAudioSessionPortDescription *output in route.outputs) {
+        if ([output.portType isEqualToString:AVAudioSessionPortBluetoothHFP]) {
+            return VSLAudioControllerOutputBluetooth;
+        } else if ([output.portType isEqualToString:AVAudioSessionPortBuiltInSpeaker]) {
+            return VSLAudioControllerOutputSpeaker;
+        }
+    }
+    return VSLAudioControllerOutputOther;
+}
+
+- (void)setOutput:(VSLAudioControllerOutputs)output {
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    if (output == VSLAudioControllerOutputSpeaker) {
+        [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
+    } else if (output == VSLAudioControllerOutputOther) {
+        [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
+    }
+    VSLLogVerbose(output == VSLAudioControllerOutputSpeaker ? @"Speaker modus activated": @"Speaker modus deactivated");
+}
+
 - (void)configureAudioSession {
     NSError *audioSessionCategoryError;
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord error:&audioSessionCategoryError];
-    DDLogVerbose(@"Setting AVAudioSessionCategory to \"Play and Record\"");
+    VSLLogVerbose(@"Setting AVAudioSessionCategory to \"Play and Record\"");
 
     if (audioSessionCategoryError) {
-        DDLogError(@"Error setting the correct AVAudioSession category");
+        VSLLogError(@"Error setting the correct AVAudioSession category");
     }
 
     // set the mode to voice chat
     NSError *audioSessionModeError;
     [[AVAudioSession sharedInstance] setMode:AVAudioSessionModeVoiceChat error:&audioSessionModeError];
-    DDLogVerbose(@"Setting AVAudioSessionCategory to \"Mode Voice Chat\"");
+    VSLLogVerbose(@"Setting AVAudioSessionCategory to \"Mode Voice Chat\"");
 
     if (audioSessionModeError) {
-        DDLogError(@"Error setting the correct AVAudioSession mode");
+        VSLLogError(@"Error setting the correct AVAudioSession mode");
     }
 }
 
@@ -54,18 +87,18 @@ NSString * const VSLAudioControllerAudioResumed = @"VSLAudioControllerAudioResum
 }
 
 - (void)activateAudioSession {
-    DDLogDebug(@"Activating audiosession");
+    VSLLogDebug(@"Activating audiosession");
     [self checkCurrentThreadIsRegisteredWithPJSUA];
     pjsua_set_no_snd_dev();
     pj_status_t status;
     status = pjsua_set_snd_dev(PJMEDIA_AUD_DEFAULT_CAPTURE_DEV, PJMEDIA_AUD_DEFAULT_PLAYBACK_DEV);
     if (status != PJ_SUCCESS) {
-        DDLogWarn(@"Failure in enabling sound device");
+        VSLLogWarning(@"Failure in enabling sound device");
     }
 }
 
 - (void)deactivateAudioSession {
-    DDLogDebug(@"Deactivating audiosession");
+    VSLLogDebug(@"Deactivating audiosession");
     [self checkCurrentThreadIsRegisteredWithPJSUA];
     pjsua_set_no_snd_dev();
 }
@@ -94,4 +127,5 @@ NSString * const VSLAudioControllerAudioResumed = @"VSLAudioControllerAudioResum
                                                           userInfo:nil];
     }
 }
+
 @end

@@ -6,10 +6,10 @@
 #import "VialerSIPLib.h"
 
 #import "Constants.h"
-#import <CocoaLumberJack/CocoaLumberjack.h>
 #import "NSError+VSLError.h"
 #import "VSLAccount.h"
 #import "VSLEndpoint.h"
+#import "VSLLogging.h"
 
 static NSString * const VialerSIPLibErrorDomain = @"VialerSIPLib.error";
  NSString * const VSLNotificationUserInfoCallKey = @"VSLNotificationUserInfoCallKey";
@@ -81,7 +81,7 @@ static NSString * const VialerSIPLibErrorDomain = @"VialerSIPLib.error";
 
 - (void)removeEndpoint {
     if (self.endpointAvailable) {
-        [self.endpoint destoryPJSUAInstance];
+        [self.endpoint destroyPJSUAInstance];
     }
 }
 
@@ -110,7 +110,7 @@ static NSString * const VialerSIPLibErrorDomain = @"VialerSIPLib.error";
         [account configureWithAccountConfiguration:accountConfiguration error:&accountConfigError];
         if (accountConfigError && error != NULL) {
             *error = accountConfigError;
-            DDLogError(@"Account configuration error: %@", accountConfigError);
+            VSLLogError(@"Account configuration error: %@", accountConfigError);
             return nil;
         }
     }
@@ -121,17 +121,21 @@ static NSString * const VialerSIPLibErrorDomain = @"VialerSIPLib.error";
     [VSLEndpoint sharedEndpoint].incomingCallBlock = incomingCallBlock;
 }
 
+- (void)setLogCallBackBlock:(void (^)(DDLogMessage*))logCallBackBlock {
+    [VSLEndpoint sharedEndpoint].logCallBackBlock = logCallBackBlock;
+}
+
 - (void)registerAccountWithUser:(id<SIPEnabledUser>  _Nonnull __autoreleasing)sipUser withCompletion:(void (^)(BOOL, VSLAccount * _Nullable))completion {
     NSError *accountConfigError;
     VSLAccount *account = [self createAccountWithSipUser:sipUser error:&accountConfigError];
     if (!account) {
-        DDLogError(@"The configuration of the account has failed:\n%@", accountConfigError);
+        VSLLogError(@"The configuration of the account has failed:\n%@", accountConfigError);
         completion(NO, nil);
     }
 
     [account registerAccountWithCompletion:^(BOOL success, NSError * _Nullable error) {
         if (!success) {
-            DDLogError(@"The registration of the account has failed.\n%@", error);
+            VSLLogError(@"The registration of the account has failed.\n%@", error);
             completion(NO, nil);
         } else {
             completion(YES, account);

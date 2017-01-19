@@ -30,15 +30,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if #available(iOS 10.0, *) {
             setupCallKit()
         }
-
+        
+        setupLogCallBack()
         setupVialerEndpoint()
-
-        do {
-            account = try VialerSIPLib.sharedInstance().createAccount(withSip: SipUser())
-        } catch let error {
-            DDLogWrapper.logError("Could not create account. Error:\(error)\nExiting")
-            assert(false)
-        }
+        setupAccount()
         return true
     }
 
@@ -47,24 +42,54 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         providerDelegate = CallKitProviderDelegate(callManager: VialerSIPLib.sharedInstance().callManager)
     }
 
-    fileprivate func setupVialerEndpoint() {
+    func setupVialerEndpoint() {
+        let prefs = UserDefaults.standard
+        let useTCP = prefs.bool(forKey: "useTCP")
+        var transportToUse: [VSLTransportConfiguration] {
+            if useTCP {
+                return [VSLTransportConfiguration(transportType: .TCP)!]
+            }
+            return [VSLTransportConfiguration(transportType: .UDP)!]
+        }
+
         let endpointConfiguration = VSLEndpointConfiguration()
         endpointConfiguration.logLevel = 3
         endpointConfiguration.userAgent = "VialerSIPLib Example App"
-        endpointConfiguration.transportConfigurations = [VSLTransportConfiguration(transportType: .TCP)!, VSLTransportConfiguration(transportType: .UDP)!]
+        endpointConfiguration.transportConfigurations = transportToUse
 
         do {
             try VialerSIPLib.sharedInstance().configureLibrary(withEndPointConfiguration: endpointConfiguration)
             // Set your incoming call block here.
-            // The code from this block will be called when the framework receives an incoming call.
-            VialerSIPLib.sharedInstance().setIncomingCall{ [weak self] (call) in
-                self?.displayIncomingCall(call: call)
-            }
+            setupIncomingCallBlock()
         } catch let error {
             DDLogWrapper.logError("Error setting up VialerSIPLib: \(error)")
         }
     }
 
+    func setupAccount() {
+        do {
+            account = try VialerSIPLib.sharedInstance().createAccount(withSip: SipUser())
+        } catch let error {
+            DDLogWrapper.logError("Could not create account. Error:\(error)\nExiting")
+            assert(false)
+        }
+    }
+    
+    func setupIncomingCallBlock() {
+        // The code from this block will be called when the framework receives an incoming call.
+        VialerSIPLib.sharedInstance().setIncomingCall{ [weak self] (call) in
+            DispatchQueue.main.async {
+                self?.displayIncomingCall(call: call)
+            }
+        }
+    }
+    
+    func setupLogCallBack() {
+        VialerSIPLib.sharedInstance().setLogCallBack { (logMessage) in
+            DDLogWrapper.log(message: logMessage)
+        }
+    }
+    
     func displayIncomingCall(call: VSLCall) {
         if #available(iOS 10, *) {
             DDLogWrapper.logInfo("Incoming call block invoked, routing through CallKit.")

@@ -4,6 +4,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <CocoaLumberjack/CocoaLumberjack.h>
 #import <VialerPJSIP/pjsua.h>
 #import "VSLEndpointConfiguration.h"
 
@@ -75,6 +76,12 @@ typedef NS_ENUM(NSInteger, VSLEndpointState) {
  */
 @property (copy, nonatomic) void (^ _Nonnull incomingCallBlock)(VSLCall * _Nullable call);
 
+
+/**
+ The logCallBackBlock will be called when there is a log message to be shown.
+ */
+@property (copy, nonatomic) void( ^ _Nonnull logCallBackBlock)(DDLogMessage *logMessage);
+
 /**
  *  References to the account that have been added to the endpoint.
  *  To add accounts as reference use the addAccount function.
@@ -97,7 +104,7 @@ typedef NS_ENUM(NSInteger, VSLEndpointState) {
 /**
  *  This will remove the pjsua configuration.
  */
-- (void)destoryPJSUAInstance;
+- (void)destroyPJSUAInstance;
 
 /**
  *  This will configure the endpoint with pjsua.

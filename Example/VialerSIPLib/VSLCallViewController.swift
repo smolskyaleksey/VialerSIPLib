@@ -3,6 +3,8 @@
 //  Copyright © 2016 Devhouse Spindle. All rights reserved.
 //
 
+import AVFoundation
+import MediaPlayer
 import UIKit
 
 private var myContext = 0
@@ -20,12 +22,15 @@ class VSLCallViewController: UIViewController, VSLKeypadViewControllerDelegate {
             static let UnwindToMainViewController = "UnwindToMainViewControllerSegue"
             static let ShowKeypad = "ShowKeypadSegue"
             static let SetupTransfer = "SetupTransferSegue"
+            static let ShowEndCall = "ShowEndCallSegue"
         }
     }
 
     // MARK: - Properties
     var callManager: VSLCallManager!
 
+    var callAnswered: Bool = false
+    
     var activeCall: VSLCall? {
         didSet {
             updateUI()
@@ -43,17 +48,21 @@ class VSLCallViewController: UIViewController, VSLKeypadViewControllerDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        UIDevice.current.isProximityMonitoringEnabled = true
         updateUI()
         startConnectDurationTimer()
         activeCall?.addObserver(self, forKeyPath: "callState", options: .new, context: &myContext)
         activeCall?.addObserver(self, forKeyPath: "onHold", options: .new, context: &myContext)
+        NotificationCenter.default.addObserver(self, selector: #selector(updateUI), name: NSNotification.Name(rawValue: VSLAudioControllerAudioInterrupted), object: nil)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        UIDevice.current.isProximityMonitoringEnabled = false
         connectDurationTimer?.invalidate()
         activeCall?.removeObserver(self, forKeyPath: "callState")
         activeCall?.removeObserver(self, forKeyPath: "onHold")
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: VSLAudioControllerAudioInterrupted), object: nil)
     }
 
     // MARK: - Outlets
@@ -87,9 +96,19 @@ class VSLCallViewController: UIViewController, VSLKeypadViewControllerDelegate {
     }
 
     @IBAction func speakerButtonPressed(_ sender: UIButton) {
-        guard let call = activeCall else { return }
-        call.toggleSpeaker()
-        updateUI()
+        if callManager.audioController.hasBluetooth {
+            // We add the MPVolumeView to the view without any size, we just need it so we can push the button in code.
+            let volumeView = MPVolumeView(frame: CGRect())
+            view.addSubview(volumeView)
+            for view in volumeView.subviews {
+                if let button = view as? UIButton {
+                    button.sendActions(for: .touchUpInside)
+                }
+            }
+        } else {
+            callManager.audioController.output = callManager.audioController.output == .speaker ? .other : .speaker
+            updateUI()
+        }
     }
 
     @IBAction func holdButtonPressed(_ sender: UIButton) {
@@ -174,7 +193,6 @@ class VSLCallViewController: UIViewController, VSLKeypadViewControllerDelegate {
             holdButton?.isEnabled = false
             hangupButton?.isEnabled = true
             speakerButton?.isEnabled = true
-            speakerButton?.setTitle(call.speaker ? "On Speaker" : "Speaker", for: UIControlState())
         case .confirmed:
             // All buttons enabled
             muteButton?.isEnabled = !call.onHold
@@ -185,7 +203,13 @@ class VSLCallViewController: UIViewController, VSLKeypadViewControllerDelegate {
             holdButton?.setTitle(call.onHold ? "On Hold" : "Hold", for: UIControlState())
             hangupButton?.isEnabled = true
             speakerButton?.isEnabled = true
-            speakerButton?.setTitle(call.speaker ? "On Speaker" : "Speaker", for: UIControlState())
+        }
+
+        guard let callManager = callManager else { return }
+        if (callManager.audioController.hasBluetooth) {
+            speakerButton?.setTitle("Audio", for: UIControlState())
+        } else {
+            speakerButton?.setTitle(callManager.audioController.output == .speaker ? "On Speaker" : "Speaker", for: UIControlState())
         }
     }
 
@@ -223,6 +247,7 @@ class VSLCallViewController: UIViewController, VSLKeypadViewControllerDelegate {
                 dateComponentsFormatter.zeroFormattingBehavior = .pad
                 dateComponentsFormatter.allowedUnits = [.minute, .second]
                 statusLabel?.text = "\(dateComponentsFormatter.string(from: call.connectDuration)!)"
+                callAnswered = true
             }
         case .disconnected:
             statusLabel?.text = "Disconnected"
@@ -246,6 +271,11 @@ class VSLCallViewController: UIViewController, VSLKeypadViewControllerDelegate {
             keypadVC.delegate = self
         } else if let transferCallVC = segue.destination as? VSLTransferCallViewController {
             transferCallVC.currentCall = activeCall
+        } else if let endOfCallVC = segue.destination as? VSLEndOfCallViewController {
+            endOfCallVC.duration = activeCall!.connectDuration
+            endOfCallVC.mos = activeCall!.mos
+            endOfCallVC.mbsUsed = activeCall!.totalMBsUsed
+            endOfCallVC.codec = activeCall!.activeCodec
         }
     }
 
@@ -255,7 +285,11 @@ class VSLCallViewController: UIViewController, VSLKeypadViewControllerDelegate {
         if context == &myContext {
             if let call = object as? VSLCall, call.callState == .disconnected {
                 DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Double(Int64(Configuration.Timing.UnwindTime * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC)) {
-                    self.performSegue(withIdentifier: Configuration.Segues.UnwindToMainViewController, sender: nil)
+                    if self.callAnswered {
+                        self.performSegue(withIdentifier: Configuration.Segues.ShowEndCall, sender: nil)
+                    } else {
+                        self.performSegue(withIdentifier: Configuration.Segues.UnwindToMainViewController, sender: nil)
+                    }
                 }
             }
             DispatchQueue.main.async {
