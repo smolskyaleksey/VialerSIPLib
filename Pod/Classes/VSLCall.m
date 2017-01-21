@@ -868,7 +868,6 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
         
         wid = ci.media[vid_idx].stream.vid.win_in;
     }
-    VSLLogInfo(@"wid:%d", wid);
     pjmedia_coord rect;
     rect.x = 0;
     rect.y = 0;
@@ -881,7 +880,6 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     pjsua_vid_win_get_info(wid, &win_info);
     win_info.is_native = PJ_FALSE;
     UIView *view = (__bridge UIView *)win_info.hwnd.info.ios.window;
-    //    win_info.show = YES;
     pjsua_vid_win_set_show(wid, PJ_TRUE);
     
     return view;
