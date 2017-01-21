@@ -31,6 +31,7 @@ const pjmedia_orient pj_ori[4] =
 };
 
 NSString * const VSLCallStateChangedNotification = @"VSLCallStateChangedNotification";
+NSString * const VSLNotificationUserInfoVideoSizeRenderKey = @"VSLNotificationUserInfoVideoSizeRenderKey";
 NSString * const VSLCallConnectedNotification = @"VSLCallConnectedNotification";
 NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotification";
 
