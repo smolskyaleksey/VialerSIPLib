@@ -815,7 +815,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
         if (prev_ori == 0 && dev_ori == UIDeviceOrientationFaceUp) {
             dev_ori = UIDeviceOrientationPortrait;
         }
-        VSLLogInfo(@"Device orientation changed: %d", (prev_ori = dev_ori));
+        VSLLogDebug(@"Device orientation changed: %d", (prev_ori = dev_ori));
         
         if (dev_ori >= UIDeviceOrientationPortrait &&
             dev_ori <= UIDeviceOrientationLandscapeRight)
@@ -890,7 +890,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     pj_thread_t *thread = 0;
     if(!pj_thread_is_registered())
     {
-        DDLogDebug(@"pj_thread_is_registered");
+        VSLLogDebug(@"pj_thread_is_registered");
         pj_thread_register(NULL,desc,&thread);
     }
     pjsua_vid_preview_param preview_param;
@@ -911,7 +911,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     pj_thread_t *thread = 0;
     if(!pj_thread_is_registered())
     {
-        DDLogDebug(@"pj_thread_is_registered");
+        VSLLogDebug(@"pj_thread_is_registered");
         pj_thread_register(NULL,desc,&thread);
     }
     pjsua_vid_preview_stop(PJMEDIA_VID_DEFAULT_CAPTURE_DEV);
