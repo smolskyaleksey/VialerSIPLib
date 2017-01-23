@@ -145,6 +145,12 @@ typedef  NS_ENUM(NSInteger, VSLCallTransferState) {
 };
 #define VSLCallTransferStateString(VSLCallTransferState) [@[@"VSLCallTransferStateUnkown", @"VSLCallTransferStateInitialized", @"VSLCallTransferStateTrying", @"VSLCallTransferStateAccepted", @"VSLCallTransferStateRejected"] objectAtIndex:VSLCallTransferState]
 
+
+typedef  NS_ENUM(NSInteger, VSLCaptureDevice) {
+    VSLCaptureDeviceFrontCamera = 2,
+    VSLCaptureDeviceBackCamera = 3,
+};
+
 @interface VSLCall : NSObject
 
 #pragma mark - Properties
@@ -434,4 +440,6 @@ typedef  NS_ENUM(NSInteger, VSLCallTransferState) {
 - (UIView *)createVideoWindow:(CGRect)frame;
 - (BOOL)startPreviewWindow;
 - (void)stopPreviewWindow;
+- (void)setCamera:(VSLCaptureDevice)cameraID;
+- (void)swithCamera;
 @end

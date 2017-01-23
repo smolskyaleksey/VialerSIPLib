@@ -839,7 +839,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 
 - (UIView *)createPreviewWindow:(CGRect)frame {
     pjsua_vid_win_id wid = 0;
-    wid = pjsua_vid_preview_get_win(PJMEDIA_VID_DEFAULT_CAPTURE_DEV);
+    wid = pjsua_vid_preview_get_win(VSLCaptureDeviceFrontCamera);
     pjmedia_coord rect;
     rect.x = 0;
     rect.y = 0;
@@ -870,8 +870,8 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
         wid = ci.media[vid_idx].stream.vid.win_in;
     }
     pjmedia_coord rect;
-    rect.x = 0;
-    rect.y = 0;
+    rect.x = frame.origin.x;
+    rect.y = frame.origin.y;
     pjmedia_rect_size rect_size;
     rect_size.h = frame.size.height;
     rect_size.w = frame.size.width;
@@ -899,10 +899,10 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     preview_param.wnd_flags = PJMEDIA_VID_DEV_WND_BORDER |
     PJMEDIA_VID_DEV_WND_RESIZABLE;
     
-    BOOL result = pjsua_vid_preview_start(PJMEDIA_VID_DEFAULT_CAPTURE_DEV, &preview_param) != PJ_SUCCESS;
+    BOOL result = pjsua_vid_preview_start(VSLCaptureDeviceFrontCamera, &preview_param) != PJ_SUCCESS;
     if(result) {
         [self stopPreviewWindow];
-        return pjsua_vid_preview_start(PJMEDIA_VID_DEFAULT_CAPTURE_DEV, &preview_param) == PJ_SUCCESS;
+        return pjsua_vid_preview_start(VSLCaptureDeviceFrontCamera, &preview_param) == PJ_SUCCESS;
     }
     return !result;
 }
@@ -918,4 +918,42 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     pjsua_vid_preview_stop(PJMEDIA_VID_DEFAULT_CAPTURE_DEV);
 }
 
+
+- (void)setCamera:(VSLCaptureDevice)cameraID {
+    int vid_idx;
+    vid_idx = pjsua_call_get_vid_stream_idx(self.callId);
+    if (vid_idx >= 0){
+        pjsua_call_vid_strm_op_param param;
+        pjsua_call_vid_strm_op_param_default(&param);
+        param.med_idx = vid_idx;
+        param.cap_dev = cameraID;
+        
+        pjsua_call_set_vid_strm(self.callId,
+                                PJSUA_CALL_VID_STRM_CHANGE_CAP_DEV,
+                                &param);
+        
+    }
+    
+}
+
+- (void)swithCamera {
+    int vid_idx;
+    vid_idx = pjsua_call_get_vid_stream_idx(self.callId);
+    if (vid_idx >= 0){
+        pjmedia_vid_dev_index cap_dev = 0;
+        pjsua_call_info ci;
+        pjsua_call_get_info(self.callId, &ci);
+        cap_dev = ci.media[vid_idx].stream.vid.cap_dev;
+        
+        pjsua_call_vid_strm_op_param param;
+        pjsua_call_vid_strm_op_param_default(&param);
+        param.med_idx = vid_idx;
+        param.cap_dev = cap_dev == VSLCaptureDeviceFrontCamera ? VSLCaptureDeviceBackCamera : VSLCaptureDeviceFrontCamera;
+        
+        pjsua_call_set_vid_strm(self.callId,
+                                PJSUA_CALL_VID_STRM_CHANGE_CAP_DEV,
+                                &param);
+        
+    }
+}
 @end
