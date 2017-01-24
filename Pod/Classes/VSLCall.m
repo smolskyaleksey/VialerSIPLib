@@ -908,6 +908,9 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 }
 
 - (void)stopPreviewWindow {
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:UIDeviceOrientationDidChangeNotification
+                                                  object:[UIDevice currentDevice]];
     pj_thread_desc desc;
     pj_thread_t *thread = 0;
     if(!pj_thread_is_registered())
