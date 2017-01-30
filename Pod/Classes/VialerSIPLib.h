@@ -100,6 +100,9 @@ typedef NS_ENUM(NSUInteger, VialerSIPLibErrors) {
  */
 @property (nonatomic) VSLStunUse mediaStunType;
 
+
+@property (nonatomic) NSInteger camera;
+
 @end
 
 @interface VialerSIPLib : NSObject

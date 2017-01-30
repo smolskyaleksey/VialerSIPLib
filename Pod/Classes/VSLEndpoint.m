@@ -397,7 +397,7 @@ static pjsip_transport *the_transport;
             param.ignore_fmtp = PJ_TRUE;
             param.enc_fmt.det.vid.size.w = 288;
             param.enc_fmt.det.vid.size.h = 352;
-            param.enc_fmt.det.vid.fps.num = 22;
+            param.enc_fmt.det.vid.fps.num = 20;
             param.enc_fmt.det.vid.fps.denum = 1;
 //            param.enc_fmt.det.vid.avg_bps = 512000;
 //            param.enc_fmt.det.vid.max_bps = 1024000;

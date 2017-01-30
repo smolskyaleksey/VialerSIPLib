@@ -129,6 +129,7 @@ static NSString * const VSLAccountErrorDomain = @"VialerSIPLib.VSLAccount";
     
     acc_cfg.vid_in_auto_show = PJ_TRUE;
     acc_cfg.vid_out_auto_transmit = PJ_TRUE;
+    acc_cfg.vid_cap_dev = accountConfiguration.camera;
 
     // If a proxy server is present on the account configuration add this to pjsua account configuration.
     if (accountConfiguration.sipProxyServer.length > 0) {

@@ -837,12 +837,12 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 
 
 
-- (UIView *)createPreviewWindow:(CGRect)frame {
+- (UIView *)createPreviewViewWith:(CGRect)frame{
     pjsua_vid_win_id wid = 0;
-    wid = pjsua_vid_preview_get_win(VSLCaptureDeviceFrontCamera);
+    wid = pjsua_vid_preview_get_win(self.account.accountConfiguration.camera);
     pjmedia_coord rect;
-    rect.x = 0;
-    rect.y = 0;
+    rect.x = frame.origin.x;
+    rect.y = frame.origin.y;
     pjmedia_rect_size rect_size;
     rect_size.h = frame.size.height;
     rect_size.w = frame.size.width;
@@ -859,7 +859,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
 }
 
 
-- (UIView *)createVideoWindow:(CGRect)frame {
+- (UIView *)createVideoWindowWithFrame:(CGRect)frame {
     int vid_idx;
     pjsua_vid_win_id wid = 0;
     vid_idx = pjsua_call_get_vid_stream_idx(_callId);
@@ -886,7 +886,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     return view;
 }
 
-- (BOOL)startPreviewWindow {
+- (BOOL)startPreview {
     pj_thread_desc desc;
     pj_thread_t *thread = 0;
     if(!pj_thread_is_registered())
@@ -899,18 +899,16 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
     preview_param.wnd_flags = PJMEDIA_VID_DEV_WND_BORDER |
     PJMEDIA_VID_DEV_WND_RESIZABLE;
     
-    BOOL result = pjsua_vid_preview_start(VSLCaptureDeviceFrontCamera, &preview_param) != PJ_SUCCESS;
-    if(result) {
-        [self stopPreviewWindow];
-        return pjsua_vid_preview_start(VSLCaptureDeviceFrontCamera, &preview_param) == PJ_SUCCESS;
-    }
+    
+    BOOL result = pjsua_vid_preview_start(self.account.accountConfiguration.camera, &preview_param) != PJ_SUCCESS;
     return !result;
 }
 
-- (void)stopPreviewWindow {
+- (void)stopPreviewView {
     [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:UIDeviceOrientationDidChangeNotification
-                                                  object:[UIDevice currentDevice]];
+                                                   name:UIDeviceOrientationDidChangeNotification
+                                                 object:[UIDevice currentDevice]];
+    
     pj_thread_desc desc;
     pj_thread_t *thread = 0;
     if(!pj_thread_is_registered())
@@ -918,7 +916,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
         VSLLogDebug(@"pj_thread_is_registered");
         pj_thread_register(NULL,desc,&thread);
     }
-    pjsua_vid_preview_stop(PJMEDIA_VID_DEFAULT_CAPTURE_DEV);
+    pjsua_vid_preview_stop(self.account.accountConfiguration.camera);//PJMEDIA_VID_DEFAULT_CAPTURE_DEV
 }
 
 
@@ -951,7 +949,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
         pjsua_call_vid_strm_op_param param;
         pjsua_call_vid_strm_op_param_default(&param);
         param.med_idx = vid_idx;
-        param.cap_dev = cap_dev == VSLCaptureDeviceFrontCamera ? VSLCaptureDeviceBackCamera : VSLCaptureDeviceFrontCamera;
+        param.cap_dev = cap_dev == VSLCaptureDeviceBackCamera ? VSLCaptureDeviceFrontCamera : VSLCaptureDeviceBackCamera;
         
         pjsua_call_set_vid_strm(self.callId,
                                 PJSUA_CALL_VID_STRM_CHANGE_CAP_DEV,

@@ -99,6 +99,7 @@ NSString * const VSLNotificationUserInfoWindowSizeKey = @"VSLNotificationUserInf
         accountConfiguration.sipProxyServer = sipUser.sipProxy ? sipUser.sipProxy : nil;
         accountConfiguration.sipRegisterOnAdd = sipUser.sipRegisterOnAdd;
         accountConfiguration.dropCallOnRegistrationFailure = YES;
+        accountConfiguration.camera = sipUser.camera;
         
         if ([sipUser respondsToSelector:@selector(mediaStunType)]) {
             accountConfiguration.mediaStunType = sipUser.mediaStunType;

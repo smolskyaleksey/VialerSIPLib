@@ -98,4 +98,6 @@ typedef NS_ENUM(NSUInteger, VSLStunUse) {
  */
 @property (nonatomic) VSLStunUse mediaStunType;
 
+@property (nonatomic) NSInteger camera;
+
 @end

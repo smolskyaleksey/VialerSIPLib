@@ -436,10 +436,10 @@ typedef  NS_ENUM(NSInteger, VSLCaptureDevice) {
 - (void)reinvite;
 
 - (void)changeOrientationVideo:(NSNotification *)note;
-- (UIView *)createPreviewWindow:(CGRect)frame;
-- (UIView *)createVideoWindow:(CGRect)frame;
-- (BOOL)startPreviewWindow;
-- (void)stopPreviewWindow;
+- (UIView *)createPreviewViewWith:(CGRect)frame;
+- (UIView *)createVideoWindowWithFrame:(CGRect)frame;
+- (BOOL)startPreview;
+- (void)stopPreviewView;
 - (void)setCamera:(VSLCaptureDevice)cameraID;
 - (void)swithCamera;
 @end
