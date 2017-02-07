@@ -35,7 +35,6 @@ NSString * const VSLNotificationUserInfoWindowSizeKey = @"VSLNotificationUserInf
 }
 
 + (BOOL)callKitAvailable {
-    return NO;
     // Check if Callkit is available by checking the CallKit classes used
     if ([CXAction class] && [CXTransaction class] && [CXCall class]) {
         return true;
@@ -96,10 +95,11 @@ NSString * const VSLNotificationUserInfoWindowSizeKey = @"VSLNotificationUserInf
         accountConfiguration.sipAccount = sipUser.sipAccount;
         accountConfiguration.sipPassword = sipUser.sipPassword;
         accountConfiguration.sipDomain = sipUser.sipDomain;
-        accountConfiguration.sipProxyServer = sipUser.sipProxy ? sipUser.sipProxy : nil;
+        if ([sipUser respondsToSelector:@selector(sipProxy)]) {
+            accountConfiguration.sipProxyServer = sipUser.sipProxy;
+        }
         accountConfiguration.sipRegisterOnAdd = sipUser.sipRegisterOnAdd;
         accountConfiguration.dropCallOnRegistrationFailure = YES;
-        accountConfiguration.camera = sipUser.camera;
         
         if ([sipUser respondsToSelector:@selector(mediaStunType)]) {
             accountConfiguration.mediaStunType = sipUser.mediaStunType;
