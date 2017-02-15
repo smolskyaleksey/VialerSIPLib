@@ -35,6 +35,7 @@ NSString * const VSLNotificationUserInfoWindowSizeKey = @"VSLNotificationUserInf
 }
 
 + (BOOL)callKitAvailable {
+    return NO;
     // Check if Callkit is available by checking the CallKit classes used
     if ([CXAction class] && [CXTransaction class] && [CXCall class]) {
         return true;
@@ -107,6 +108,7 @@ NSString * const VSLNotificationUserInfoWindowSizeKey = @"VSLNotificationUserInf
         if ([sipUser respondsToSelector:@selector(sipStunType)]) {
             accountConfiguration.sipStunType = sipUser.sipStunType;
         }
+        accountConfiguration.camera = sipUser.camera;
 
         account = [[VSLAccount alloc] initWithCallManager:self.callManager];
 
