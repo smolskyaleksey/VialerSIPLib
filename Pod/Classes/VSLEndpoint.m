@@ -14,6 +14,7 @@
 #import "VSLLogging.h"
 #import "VSLNetworkMonitor.h"
 #import "VSLTransportConfiguration.h"
+#import <VialerPJSIP/transport_zrtp.h>
 
 static NSString * const VSLEndpointErrorDomain = @"VialerSIPLib.VSLEndpoint.error";
 
@@ -112,6 +113,166 @@ static pjsip_transport *the_transport;
 
 #pragma mark - Lifecycle
 
+
+const char* InfoCodes[] =
+{
+    "EMPTY",
+    "Hello received, preparing a Commit",
+    "Commit: Generated a public DH key",
+    "Responder: Commit received, preparing DHPart1",
+    "DH1Part: Generated a public DH key",
+    "Initiator: DHPart1 received, preparing DHPart2",
+    "Responder: DHPart2 received, preparing Confirm1",
+    "Initiator: Confirm1 received, preparing Confirm2",
+    "Responder: Confirm2 received, preparing Conf2Ack",
+    "At least one retained secrets matches - security OK",
+    "Entered secure state",
+    "No more security for this session"
+};
+
+/**
+ * Sub-codes for Warning
+ */
+const char* WarningCodes [] =
+{
+    "EMPTY",
+    "Commit contains an AES256 cipher but does not offer a Diffie-Helman 4096",
+    "Received a GoClear message",
+    "Hello offers an AES256 cipher but does not offer a Diffie-Helman 4096",
+    "No retained shared secrets available - must verify SAS",
+    "Internal ZRTP packet checksum mismatch - packet dropped",
+    "Dropping packet because SRTP authentication failed!",
+    "Dropping packet because SRTP replay check failed!",
+    "Valid retained shared secrets availabe but no matches found - must verify SAS"
+};
+
+/**
+ * Sub-codes for Severe
+ */
+const char* SevereCodes[] =
+{
+    "EMPTY",
+    "Hash HMAC check of Hello failed!",
+    "Hash HMAC check of Commit failed!",
+    "Hash HMAC check of DHPart1 failed!",
+    "Hash HMAC check of DHPart2 failed!",
+    "Cannot send data - connection or peer down?",
+    "Internal protocol error occured!",
+    "Cannot start a timer - internal resources exhausted?",
+    "Too much retries during ZRTP negotiation - connection or peer down?"
+};
+
+static void secureOn(void* data, char* cipher)
+{
+    VSLLogInfo(@"Security enabled, cipher: %s", cipher);
+}
+static void secureOff(void* data)
+{
+    VSLLogInfo(@"Security disabled");
+}
+static void showSAS(void* data, char* sas, int32_t verified)
+{
+    VSLLogInfo(@"SAS data: %s, verified: %d", sas, verified);
+}
+static void confirmGoClear(void* data)
+{
+    VSLLogInfo(@"GoClear????????");
+}
+static void showMessage(void* data, int32_t sev, int32_t subCode)
+{
+    switch (sev)
+    {
+        case zrtp_Info:
+            VSLLogInfo(@"ZRTP info message: %s", InfoCodes[subCode]);
+            break;
+            
+        case zrtp_Warning:
+            VSLLogInfo(@"ZRTP warning message: %s", WarningCodes[subCode]);
+            break;
+            
+        case zrtp_Severe:
+            VSLLogInfo(@"ZRTP severe message: %s", SevereCodes[subCode]);
+            break;
+            
+        case zrtp_ZrtpError:
+            VSLLogInfo(@"ZRTP Error: severity: %d, subcode: %x", sev, subCode);
+            break;
+    }
+}
+static void zrtpNegotiationFailed(void* data, int32_t severity, int32_t subCode)
+{
+    VSLLogInfo(@"ZRTP failed: %d, subcode: %d", severity, subCode);
+}
+static void zrtpNotSuppOther(void* data)
+{
+    VSLLogInfo(@"ZRTP not supported by other peer");
+}
+static void zrtpAskEnrollment(void* data, int32_t info)
+{
+    VSLLogInfo(@"ZRTP - Ask PBX enrollment");
+}
+static void zrtpInformEnrollment(void* data, int32_t info)
+{
+    VSLLogInfo(@"ZRTP - Inform PBX enrollement");
+}
+static void signSAS(void* data, unsigned char* sas)
+{
+    VSLLogInfo(@"ZRTP - sign SAS");
+}
+static int32_t checkSASSignature(void* data, unsigned char* sas)
+{
+    VSLLogInfo(@"ZRTP - check SAS signature");
+}
+
+static zrtp_UserCallbacks usercb =
+{
+    &secureOn,
+    &secureOff,
+    &showSAS,
+    &confirmGoClear,
+    &showMessage,
+    &zrtpNegotiationFailed,
+    &zrtpNotSuppOther,
+    &zrtpAskEnrollment,
+    &zrtpInformEnrollment,
+    &signSAS,
+    &checkSASSignature,
+    NULL
+};
+
+/* Initialize the ZRTP transport and the user callbacks */
+pjmedia_transport* on_create_media_transport(pjsua_call_id call_id,
+                                             unsigned media_idx,
+                                             pjmedia_transport *base_tp,
+                                             unsigned flags)
+{
+    pjmedia_transport *zrtp_tp = NULL;
+    pj_status_t status;
+    pjmedia_endpt* endpt = pjsua_get_pjmedia_endpt();
+    
+    VSLLogInfo(@"ZRTP transport created");
+    status = pjmedia_transport_zrtp_create(endpt, NULL, base_tp,
+                                           &zrtp_tp, flags);
+    usercb.userData = zrtp_tp;
+    
+    /* this is optional but highly recommended to enable the application
+     * to report status information to the user, such as verfication status,
+     * SAS code, etc
+     */
+    pjmedia_transport_zrtp_setUserCallback(zrtp_tp, &usercb);
+    
+    /*
+     * Initialize the transport. Just the filename of the ZID file that holds
+     * our partners ZID, shared data etc. If the files does not exists it will
+     * be created an initialized.
+     */
+    
+    NSString *path = [[[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject] path];
+    path = [path stringByAppendingPathComponent:@"simple.zid"];
+    pjmedia_transport_zrtp_initialize(zrtp_tp, [path cStringUsingEncoding:1], PJ_TRUE);
+    return zrtp_tp;
+}
+
 - (BOOL)startEndpointWithEndpointConfiguration:(VSLEndpointConfiguration  * _Nonnull)endpointConfiguration error:(NSError **)error {
     // Do nothing if it's already started.
     if (self.state == VSLEndpointStarted) {
@@ -172,7 +333,11 @@ static pjsip_transport *the_transport;
     endpointConfig.user_agent = endpointConfiguration.userAgent.pjString;
     endpointConfig.stun_srv_cnt = 1;
     endpointConfig.stun_srv[0] = @"stun.freeswitch.org".pjString;
-
+    
+    if (endpointConfiguration.zrtpEnable) {
+        endpointConfig.cb.on_create_media_transport = &on_create_media_transport;
+    }
+    
     // Configure the media information for the endpoint.
     pjsua_media_config mediaConfig;
     pjsua_media_config_default(&mediaConfig);

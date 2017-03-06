@@ -83,4 +83,13 @@
  * User-Agent header will be sent with outgoing requests.
  */
 @property (strong, nonatomic) NSString *userAgent;
+
+/**
+ *  Enable zrtp, default NO
+ *
+ *  @return BOOL
+ *  @default NO
+ */
+@property (assign, nonatomic) BOOL zrtpEnable;
+
 @end
