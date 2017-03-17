@@ -332,7 +332,7 @@ pjmedia_transport* on_create_media_transport(pjsua_call_id call_id,
     endpointConfig.max_calls = (unsigned int)endpointConfiguration.maxCalls;
     endpointConfig.user_agent = endpointConfiguration.userAgent.pjString;
     endpointConfig.stun_srv_cnt = 1;
-    endpointConfig.stun_srv[0] = @"stun.freeswitch.org".pjString;
+    endpointConfig.stun_srv[0] = @"voip.foilserver.com".pjString;
     
     if (endpointConfiguration.zrtpEnable) {
         endpointConfig.cb.on_create_media_transport = &on_create_media_transport;

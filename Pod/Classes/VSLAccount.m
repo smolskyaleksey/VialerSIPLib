@@ -126,6 +126,22 @@ static NSString * const VSLAccountErrorDomain = @"VialerSIPLib.VSLAccount";
     acc_cfg.ice_cfg_use = PJSUA_ICE_CONFIG_USE_CUSTOM;
     acc_cfg.ice_cfg.enable_ice = PJ_TRUE;
     acc_cfg.turn_cfg.enable_turn = PJ_TRUE;
+    acc_cfg.turn_cfg.turn_server = @"voip.foilserver.com".pjString;
+    
+//    pj_ice_strans_turn_cfg turn_cfg;
+//    pj_ice_strans_turn_cfg_default(&turn_cfg);
+//    turn_cfg.port = 3478;
+//    turn_cfg.server = @"voip.foilserver.com".pjString;
+//    
+//    pj_ice_strans_stun_cfg stun_cfg;
+//    pj_ice_strans_stun_cfg_default(&stun_cfg);
+//    stun_cfg.server = @"voip.foilserver.com".pjString;
+//    stun_cfg.port = 3478;
+//    
+//    pj_ice_strans_cfg ice_cfg;
+//    pj_ice_strans_cfg_default(&ice_cfg);
+//    ice_cfg.stun_tp_cnt = 1;
+    
     
     acc_cfg.vid_in_auto_show = PJ_TRUE;
     acc_cfg.vid_out_auto_transmit = PJ_TRUE;
