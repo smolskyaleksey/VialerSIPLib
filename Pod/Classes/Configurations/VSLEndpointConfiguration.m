@@ -28,6 +28,10 @@ static NSUInteger const VSLEndpointConfigurationSndClockRate = 0;
 
         self.clockRate = VSLEndpointConfigurationClockRate;
         self.sndClockRate = VSLEndpointConfigurationSndClockRate;
+        self.zrtpEnable = NO;
+        self.iceEnable = YES;
+        self.stunEnable = YES;
+        self.turnEnable = YES;
     }
     return self;
 }

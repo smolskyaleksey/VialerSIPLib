@@ -92,4 +92,26 @@
  */
 @property (assign, nonatomic) BOOL zrtpEnable;
 
+/**
+ *  Enable ice, default YES
+ *
+ *  @return BOOL
+ *  @default YES
+ */
+@property (assign, nonatomic) BOOL iceEnable;
+/**
+ *  Enable zrtp, default YES
+ *
+ *  @return BOOL
+ *  @default YES
+ */
+@property (assign, nonatomic) BOOL stunEnable;
+/**
+ *  Enable zrtp, default YES
+ *
+ *  @return BOOL
+ *  @default YES
+ */
+@property (assign, nonatomic) BOOL turnEnable;
+
 @end

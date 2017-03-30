@@ -331,8 +331,13 @@ pjmedia_transport* on_create_media_transport(pjsua_call_id call_id,
     endpointConfig.cb.on_call_media_event = &onCallMediaEvent;
     endpointConfig.max_calls = (unsigned int)endpointConfiguration.maxCalls;
     endpointConfig.user_agent = endpointConfiguration.userAgent.pjString;
-    endpointConfig.stun_srv_cnt = 1;
-    endpointConfig.stun_srv[0] = @"voip.foilserver.com".pjString;
+    
+    if (endpointConfiguration.stunEnable) {
+        endpointConfig.stun_srv_cnt = 1;
+        endpointConfig.stun_srv[0] = @"voip.foilserver.com".pjString;
+    }
+    
+    endpointConfig.nat_type_in_sdp = 2;
     
     if (endpointConfiguration.zrtpEnable) {
         endpointConfig.cb.on_create_media_transport = &on_create_media_transport;
@@ -344,6 +349,18 @@ pjmedia_transport* on_create_media_transport(pjsua_call_id call_id,
     mediaConfig.clock_rate = (unsigned int)endpointConfiguration.clockRate == 0 ? PJSUA_DEFAULT_CLOCK_RATE : (unsigned int)endpointConfiguration.clockRate;
     mediaConfig.snd_clock_rate = (unsigned int)endpointConfiguration.sndClockRate;
 
+    if (endpointConfiguration.turnEnable) {
+        mediaConfig.enable_turn = PJ_TRUE;
+        mediaConfig.turn_server = @"voip.foilserver.com".pjString;
+        mediaConfig.turn_conn_type = PJ_TURN_TP_UDP;
+    }
+    
+    if (endpointConfiguration.iceEnable) {
+        mediaConfig.enable_ice = PJ_TRUE;
+    }
+    
+    
+    
     // Initialize Endpoint.
     status = pjsua_init(&endpointConfig, &logConfig, &mediaConfig);
     if (status != PJ_SUCCESS) {

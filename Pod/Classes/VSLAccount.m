@@ -123,10 +123,13 @@ static NSString * const VSLAccountErrorDomain = @"VialerSIPLib.VSLAccount";
     acc_cfg.media_stun_use = accountConfiguration.mediaStunType;
     acc_cfg.sip_stun_use = accountConfiguration.sipStunType;
     
-    acc_cfg.ice_cfg_use = PJSUA_ICE_CONFIG_USE_CUSTOM;
-    acc_cfg.ice_cfg.enable_ice = PJ_TRUE;
-    acc_cfg.turn_cfg.enable_turn = PJ_TRUE;
-    acc_cfg.turn_cfg.turn_server = @"voip.foilserver.com".pjString;
+//    acc_cfg.ice_cfg_use = PJSUA_ICE_CONFIG_USE_CUSTOM;
+//    acc_cfg.ice_cfg.enable_ice = PJ_TRUE;
+//    
+//    acc_cfg.turn_cfg_use = PJSUA_TURN_CONFIG_USE_CUSTOM;
+//    acc_cfg.turn_cfg.enable_turn = PJ_TRUE;
+//    acc_cfg.turn_cfg.turn_conn_type = PJ_TURN_TP_UDP;
+//    acc_cfg.turn_cfg.turn_server = @"voip.foilserver.com".pjString;
     
 //    pj_ice_strans_turn_cfg turn_cfg;
 //    pj_ice_strans_turn_cfg_default(&turn_cfg);

@@ -327,7 +327,6 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
         self.hasVideo = callInfo.rem_vid_cnt > 0;
     }
     self.callStateText = [NSString stringWithPJString:callInfo.state_text];
-    self.callState = (VSLCallState)callInfo.state;
     self.lastStatus = callInfo.last_status;
     self.lastStatusText = [NSString stringWithPJString:callInfo.last_status_text];
     self.localURI = [NSString stringWithPJString:callInfo.local_info];
@@ -337,6 +336,7 @@ NSString * const VSLCallDisconnectedNotification = @"VSLCallDisconnectedNotifica
         self.callerName = callerInfo[@"caller_name"];
         self.callerNumber = callerInfo[@"caller_number"];
     }
+    self.callState = (VSLCallState)callInfo.state;
 }
 
 - (void)callStateChanged:(pjsua_call_info)callInfo {
